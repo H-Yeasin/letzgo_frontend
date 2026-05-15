@@ -23,13 +23,28 @@ import '../screens/home/main_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen<AuthState>(
+      authProvider,
+      (previous, next) => notifyListeners(),
+    );
+  }
+}
+
+final routerNotifierProvider = Provider((ref) => RouterNotifier(ref));
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    refreshListenable: notifier,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final isAuthenticated = authState.isAuthenticated;
       final isOnboardingComplete = !authState.isNewUser;
       final isSplash = state.matchedLocation == '/';
@@ -38,16 +53,23 @@ final routerProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/otp-verification') ||
           state.matchedLocation.startsWith('/profile-setup');
 
-      // If loading, don't redirect
+      // If loading, don't redirect from splash
       if (authState.isLoading && isSplash) return null;
 
+      // Handle Splash screen transition
+      if (isSplash) {
+        if (!isAuthenticated) return '/phone-input';
+        if (!isOnboardingComplete) return '/profile-setup';
+        return '/home';
+      }
+
       // If not authenticated and not on auth route, go to phone input
-      if (!isAuthenticated && !isAuthRoute && !isSplash) {
+      if (!isAuthenticated && !isAuthRoute) {
         return '/phone-input';
       }
 
       // If authenticated but not onboarded, go to profile setup
-      if (isAuthenticated && !isOnboardingComplete && !isSplash) {
+      if (isAuthenticated && !isOnboardingComplete) {
         if (state.matchedLocation != '/profile-setup') {
           return '/profile-setup';
         }
