@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../constants/theme.dart';
+import '../../models/create_ride_ping_request.dart';
 import '../../providers/ping_provider.dart';
 
 class HostRideScreen extends ConsumerStatefulWidget {
@@ -34,19 +36,60 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (!mounted) return;
 
-    final ping = await ref.read(pingProvider.notifier).createPing({
-      'pickup_area': _pickupController.text.trim(),
-      'destination_text': _destinationController.text.trim(),
-      'estimated_fare': double.parse(_fareController.text.trim()),
-      'pickup_lat': 23.8103,
-      'pickup_lng': 90.4125,
-      'gender_preference': _genderPref,
-      'passenger_limit': _passengerLimit,
-      'meetup_point': _meetupController.text.trim().isEmpty
+    // Resolve pickup area to coordinates via geocoding
+    final pickupAddress = _pickupController.text.trim();
+    final position = await CreateRidePingRequest.geocodeAddress(pickupAddress);
+
+    if (!mounted) return;
+
+    if (position == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not find the pickup location. Please be more specific.',
+          ),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
+
+    // Optional: try to geocode destination as well
+    double? destLat;
+    double? destLng;
+    try {
+      final destLocations = await locationFromAddress(
+        _destinationController.text.trim(),
+      );
+      if (destLocations.isNotEmpty) {
+        destLat = destLocations.first.latitude;
+        destLng = destLocations.first.longitude;
+      }
+    } catch (_) {
+      // Destination geocoding is optional – proceed without it
+    }
+
+    if (!mounted) return;
+
+    final request = CreateRidePingRequest(
+      pickupArea: pickupAddress,
+      destinationText: _destinationController.text.trim(),
+      pickupLat: position.latitude,
+      pickupLng: position.longitude,
+      destinationLat: destLat,
+      destinationLng: destLng,
+      estimatedFare: double.parse(_fareController.text.trim()),
+      genderPreference: _genderPref,
+      passengerLimit: _passengerLimit,
+      meetupPoint: _meetupController.text.trim().isEmpty
           ? null
           : _meetupController.text.trim(),
-      'expires_in_minutes': _expiryMinutes,
-    });
+      expiresInMinutes: _expiryMinutes,
+    );
+
+    final ping = await ref
+        .read(pingProvider.notifier)
+        .createPing(request.toJson());
 
     if (ping != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

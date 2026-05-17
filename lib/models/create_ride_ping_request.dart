@@ -1,0 +1,74 @@
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+
+class CreateRidePingRequest {
+  final String pickupArea;
+  final String destinationText;
+  final double pickupLat;
+  final double pickupLng;
+  final double? destinationLat;
+  final double? destinationLng;
+  final double estimatedFare;
+  final String genderPreference;
+  final int passengerLimit;
+  final String? meetupPoint;
+  final int expiresInMinutes;
+
+  CreateRidePingRequest({
+    required this.pickupArea,
+    required this.destinationText,
+    required this.pickupLat,
+    required this.pickupLng,
+    this.destinationLat,
+    this.destinationLng,
+    required this.estimatedFare,
+    this.genderPreference = 'any',
+    this.passengerLimit = 1,
+    this.meetupPoint,
+    this.expiresInMinutes = 30,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'pickup_area': pickupArea,
+      'destination_text': destinationText,
+      'pickup_lat': pickupLat,
+      'pickup_lng': pickupLng,
+      'estimated_fare': estimatedFare,
+      'gender_preference': genderPreference,
+      'passenger_limit': passengerLimit,
+      'expires_in_minutes': expiresInMinutes,
+    };
+    if (destinationLat != null) map['destination_lat'] = destinationLat;
+    if (destinationLng != null) map['destination_lng'] = destinationLng;
+    if (meetupPoint != null && meetupPoint!.isNotEmpty) {
+      map['meetup_point'] = meetupPoint;
+    }
+    return map;
+  }
+
+  /// Try to geocode a text address to coordinates.
+  /// Returns null if geocoding fails (caller should use a fallback or stop).
+  static Future<Position?> geocodeAddress(String address) async {
+    try {
+      final locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        return Position(
+          longitude: locations.first.longitude,
+          latitude: locations.first.latitude,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          heading: 0,
+          speed: 0,
+          speedAccuracy: 0,
+          altitudeAccuracy: 0,
+          headingAccuracy: 0,
+        );
+      }
+    } catch (_) {
+      // Geocoding failed – return null so the caller can handle it.
+    }
+    return null;
+  }
+}
