@@ -3,8 +3,8 @@ import 'user.dart';
 class RidePing {
   final String id;
   final String hostId;
-  final String pickupArea;
-  final String destinationText;
+  final String pickupLabel;
+  final String destinationLabel;
   final double pickupLat;
   final double pickupLng;
   final double? destinationLat;
@@ -12,7 +12,8 @@ class RidePing {
   final double estimatedFare;
   final double? finalFare;
   final String genderPreference;
-  final int passengerLimit;
+  final int maxPassengers;
+  final int currentPassengers;
   final String? meetupPoint;
   final String status;
   final DateTime expiresAt;
@@ -22,8 +23,8 @@ class RidePing {
   RidePing({
     required this.id,
     required this.hostId,
-    required this.pickupArea,
-    required this.destinationText,
+    required this.pickupLabel,
+    required this.destinationLabel,
     required this.pickupLat,
     required this.pickupLng,
     this.destinationLat,
@@ -31,7 +32,8 @@ class RidePing {
     required this.estimatedFare,
     this.finalFare,
     this.genderPreference = 'any',
-    this.passengerLimit = 1,
+    this.maxPassengers = 1,
+    this.currentPassengers = 0,
     this.meetupPoint,
     this.status = 'open',
     required this.expiresAt,
@@ -39,12 +41,15 @@ class RidePing {
     this.host,
   });
 
+  int get availableSeats =>
+      (maxPassengers - currentPassengers).clamp(0, maxPassengers);
+
   factory RidePing.fromJson(Map<String, dynamic> json) {
     return RidePing(
       id: json['id'] as String,
       hostId: json['host_id'] as String,
-      pickupArea: json['pickup_area'] as String,
-      destinationText: json['destination_text'] as String,
+      pickupLabel: json['pickup_label'] as String,
+      destinationLabel: json['destination_label'] as String,
       pickupLat: (json['pickup_lat'] as num).toDouble(),
       pickupLng: (json['pickup_lng'] as num).toDouble(),
       destinationLat: (json['destination_lat'] as num?)?.toDouble(),
@@ -52,7 +57,8 @@ class RidePing {
       estimatedFare: (json['estimated_fare'] as num).toDouble(),
       finalFare: (json['final_fare'] as num?)?.toDouble(),
       genderPreference: json['gender_preference'] as String? ?? 'any',
-      passengerLimit: json['passenger_limit'] as int? ?? 1,
+      maxPassengers: json['max_passengers'] as int? ?? 1,
+      currentPassengers: json['current_passengers'] as int? ?? 0,
       meetupPoint: json['meetup_point'] as String?,
       status: json['status'] as String? ?? 'open',
       expiresAt: DateTime.parse(json['expires_at'] as String),

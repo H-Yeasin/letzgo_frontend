@@ -86,7 +86,7 @@ class RidePingCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          ping.pickupArea,
+                          ping.pickupLabel,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -95,7 +95,7 @@ class RidePingCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          ping.destinationText,
+                          ping.destinationLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: AppTheme.lightTextColor,
                           ),
@@ -145,7 +145,7 @@ class RidePingCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '1/${ping.passengerLimit}',
+                    '${ping.availableSeats}/${ping.maxPassengers}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppTheme.lightTextColor,
                     ),

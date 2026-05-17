@@ -7,6 +7,7 @@ import '../screens/auth/otp_verification_screen.dart';
 import '../screens/auth/profile_setup_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/home/discover_screen.dart';
+import '../screens/home/find_ride_screen.dart';
 import '../screens/home/chats_list_screen.dart';
 import '../screens/home/profile_screen.dart';
 import '../screens/home/host_ride_screen.dart';
@@ -27,10 +28,7 @@ class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
 
   RouterNotifier(this._ref) {
-    _ref.listen<AuthState>(
-      authProvider,
-      (previous, next) => notifyListeners(),
-    );
+    _ref.listen<AuthState>(authProvider, (previous, next) => notifyListeners());
   }
 }
 
@@ -150,6 +148,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Detail routes (outside shell, full screen)
+      GoRoute(
+        path: '/find-ride',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const FindRideScreen(),
+      ),
       GoRoute(
         path: '/host-ride',
         parentNavigatorKey: _rootNavigatorKey,

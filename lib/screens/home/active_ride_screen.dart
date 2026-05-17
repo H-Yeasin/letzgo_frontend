@@ -126,14 +126,14 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        match.ride!.pickupArea,
+                        match.ride!.pickupLabel,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        match.ride!.destinationText,
+                        match.ride!.destinationLabel,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),

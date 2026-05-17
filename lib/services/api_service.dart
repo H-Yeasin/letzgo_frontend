@@ -123,6 +123,26 @@ class ApiService {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> findRides({
+    required double currentLat,
+    required double currentLng,
+    required double destinationLat,
+    required double destinationLng,
+    double radius = 500.0,
+  }) async {
+    final response = await _dio.post(
+      '/rides/find',
+      data: {
+        'current_lat': currentLat,
+        'current_lng': currentLng,
+        'destination_lat': destinationLat,
+        'destination_lng': destinationLng,
+        'radius': radius,
+      },
+    );
+    return response.data;
+  }
+
   // ============= Match Endpoints =============
 
   Future<Map<String, dynamic>> requestMatch(String rideId) async {

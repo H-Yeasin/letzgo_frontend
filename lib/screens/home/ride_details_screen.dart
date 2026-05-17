@@ -126,7 +126,7 @@ class _RideDetailsScreenState extends ConsumerState<RideDetailsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      ping.pickupArea,
+                      ping.pickupLabel,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -140,7 +140,7 @@ class _RideDetailsScreenState extends ConsumerState<RideDetailsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      ping.destinationText,
+                      ping.destinationLabel,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -202,8 +202,8 @@ class _RideDetailsScreenState extends ConsumerState<RideDetailsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Passenger Limit'),
-                      Text('${ping.passengerLimit}'),
+                      const Text('Passengers'),
+                      Text('${ping.currentPassengers}/${ping.maxPassengers}'),
                     ],
                   ),
                 ],

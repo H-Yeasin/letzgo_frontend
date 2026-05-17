@@ -2,41 +2,41 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
 class CreateRidePingRequest {
-  final String pickupArea;
-  final String destinationText;
+  final String pickupLabel;
+  final String destinationLabel;
   final double pickupLat;
   final double pickupLng;
   final double? destinationLat;
   final double? destinationLng;
   final double estimatedFare;
   final String genderPreference;
-  final int passengerLimit;
+  final int maxPassengers;
   final String? meetupPoint;
   final int expiresInMinutes;
 
   CreateRidePingRequest({
-    required this.pickupArea,
-    required this.destinationText,
+    required this.pickupLabel,
+    required this.destinationLabel,
     required this.pickupLat,
     required this.pickupLng,
     this.destinationLat,
     this.destinationLng,
     required this.estimatedFare,
     this.genderPreference = 'any',
-    this.passengerLimit = 1,
+    this.maxPassengers = 1,
     this.meetupPoint,
     this.expiresInMinutes = 30,
   });
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{
-      'pickup_area': pickupArea,
-      'destination_text': destinationText,
+      'pickup_label': pickupLabel,
+      'destination_label': destinationLabel,
       'pickup_lat': pickupLat,
       'pickup_lng': pickupLng,
       'estimated_fare': estimatedFare,
       'gender_preference': genderPreference,
-      'passenger_limit': passengerLimit,
+      'max_passengers': maxPassengers,
       'expires_in_minutes': expiresInMinutes,
     };
     if (destinationLat != null) map['destination_lat'] = destinationLat;

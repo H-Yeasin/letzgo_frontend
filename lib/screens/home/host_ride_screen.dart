@@ -72,15 +72,15 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
     if (!mounted) return;
 
     final request = CreateRidePingRequest(
-      pickupArea: pickupAddress,
-      destinationText: _destinationController.text.trim(),
+      pickupLabel: pickupAddress,
+      destinationLabel: _destinationController.text.trim(),
       pickupLat: position.latitude,
       pickupLng: position.longitude,
       destinationLat: destLat,
       destinationLng: destLng,
       estimatedFare: double.parse(_fareController.text.trim()),
       genderPreference: _genderPref,
-      passengerLimit: _passengerLimit,
+      maxPassengers: _passengerLimit,
       meetupPoint: _meetupController.text.trim().isEmpty
           ? null
           : _meetupController.text.trim(),

@@ -136,7 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     icon: Icons.person_search,
                     label: 'Find a Ride',
                     color: AppTheme.secondaryColor,
-                    onTap: () => context.push('/discover'),
+                    onTap: () => context.push('/find-ride'),
                   ),
                 ),
               ],

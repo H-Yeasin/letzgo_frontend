@@ -91,7 +91,7 @@ class _ChatsListScreenState extends ConsumerState<ChatsListScreen> {
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text(
-                        '${match.ride?.pickupArea ?? ''} → ${match.ride?.destinationText ?? ''}',
+                        '${match.ride?.pickupLabel ?? ''} → ${match.ride?.destinationLabel ?? ''}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

@@ -9,6 +9,8 @@ class PingState {
   final List<RidePing> nearbyPings;
   final RidePing? selectedPing;
   final List<RidePing> myPings;
+  final List<RidePing> findResults;
+  final bool isFindLoading;
   final String? error;
 
   const PingState({
@@ -16,6 +18,8 @@ class PingState {
     this.nearbyPings = const [],
     this.selectedPing,
     this.myPings = const [],
+    this.findResults = const [],
+    this.isFindLoading = false,
     this.error,
   });
 
@@ -24,6 +28,8 @@ class PingState {
     List<RidePing>? nearbyPings,
     RidePing? selectedPing,
     List<RidePing>? myPings,
+    List<RidePing>? findResults,
+    bool? isFindLoading,
     String? error,
   }) {
     return PingState(
@@ -31,6 +37,8 @@ class PingState {
       nearbyPings: nearbyPings ?? this.nearbyPings,
       selectedPing: selectedPing ?? this.selectedPing,
       myPings: myPings ?? this.myPings,
+      findResults: findResults ?? this.findResults,
+      isFindLoading: isFindLoading ?? this.isFindLoading,
       error: error,
     );
   }
@@ -74,6 +82,31 @@ class PingNotifier extends StateNotifier<PingState> {
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
       return null;
+    }
+  }
+
+  Future<void> findRides({
+    required double currentLat,
+    required double currentLng,
+    required double destinationLat,
+    required double destinationLng,
+    double radius = 500.0,
+  }) async {
+    state = state.copyWith(isFindLoading: true, error: null);
+    try {
+      final data = await _api.findRides(
+        currentLat: currentLat,
+        currentLng: currentLng,
+        destinationLat: destinationLat,
+        destinationLng: destinationLng,
+        radius: radius,
+      );
+      final items = (data['items'] as List)
+          .map((e) => RidePing.fromJson(e as Map<String, dynamic>))
+          .toList();
+      state = state.copyWith(isFindLoading: false, findResults: items);
+    } catch (e) {
+      state = state.copyWith(isFindLoading: false, error: e.toString());
     }
   }
 
