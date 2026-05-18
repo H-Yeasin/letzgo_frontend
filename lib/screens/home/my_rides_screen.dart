@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../constants/theme.dart';
-import '../../providers/match_provider.dart';
+import '../../models/ride_ping.dart';
+import '../../providers/ping_provider.dart';
 import '../../widgets/ride_ping_card.dart';
-import '../../models/ride_ping.dart' as models;
 
 class MyRidesScreen extends ConsumerStatefulWidget {
   const MyRidesScreen({super.key});
@@ -14,14 +15,15 @@ class MyRidesScreen extends ConsumerStatefulWidget {
 
 class _MyRidesScreenState extends ConsumerState<MyRidesScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  late final TabController _tabController;
+  bool _isDeletingExpired = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(matchProvider.notifier).fetchMyMatches();
+      ref.read(pingProvider.notifier).fetchMyPings();
     });
   }
 
@@ -33,14 +35,14 @@ class _MyRidesScreenState extends ConsumerState<MyRidesScreen>
 
   @override
   Widget build(BuildContext context) {
-    final matchState = ref.watch(matchProvider);
+    final pingState = ref.watch(pingProvider);
     final theme = Theme.of(context);
-
-    final activeMatches = matchState.myMatches
-        .where((m) => m.status == 'in_progress')
+    final activeStatuses = {'open', 'matched'};
+    final activeRides = pingState.myPings
+        .where((ping) => activeStatuses.contains(ping.status))
         .toList();
-    final pendingMatches = matchState.myMatches
-        .where((m) => m.status == 'matched')
+    final pastRides = pingState.myPings
+        .where((ping) => !activeStatuses.contains(ping.status))
         .toList();
 
     return Scaffold(
@@ -49,33 +51,44 @@ class _MyRidesScreenState extends ConsumerState<MyRidesScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Active (${activeMatches.length})'),
-            Tab(text: 'Pending (${pendingMatches.length})'),
+            Tab(text: 'Active (${activeRides.length})'),
+            Tab(text: 'Past (${pastRides.length})'),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildRideList(activeMatches, matchState, 'No active rides', theme),
-          _buildRideList(
-            pendingMatches,
-            matchState,
-            'No pending requests',
-            theme,
-          ),
-        ],
+      body: RefreshIndicator(
+        onRefresh: () async =>
+            ref.read(pingProvider.notifier).fetchMyPings(),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildRideList(
+              activeRides,
+              pingState,
+              'No active rides yet',
+              theme,
+            ),
+            _buildRideList(
+              pastRides,
+              pingState,
+              'No past rides yet',
+              theme,
+              showDeleteExpiredAction: true,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildRideList(
-    List list,
-    MatchState matchState,
+    List<RidePing> list,
+    PingState pingState,
     String emptyText,
     ThemeData theme,
+    {bool showDeleteExpiredAction = false}
   ) {
-    if (matchState.isLoading && list.isEmpty) {
+    if (pingState.isLoading && list.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -101,27 +114,84 @@ class _MyRidesScreenState extends ConsumerState<MyRidesScreen>
       );
     }
 
+    final headerCount = showDeleteExpiredAction ? 1 : 0;
+
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      itemCount: list.length,
+      itemCount: list.length + headerCount,
       itemBuilder: (context, index) {
-        final match = list[index];
-        if (match.ride == null) return const SizedBox.shrink();
+        if (headerCount == 1 && index == 0) {
+          return _buildDeleteExpiredButton(context, theme);
+        }
+
+        final ping = list[index - headerCount];
         return RidePingCard(
-          ping: match.ride!,
-          showActions: true,
-          onTap: () => _onRideTap(match),
+          ping: ping,
+          onTap: () => context.push('/ride-details/${ping.id}'),
         );
       },
     );
   }
 
-  void _onRideTap(models.Match match) {
-    // Navigate based on match status
-    if (match.status == 'in_progress' && mounted) {
-      Navigator.of(context).pushNamed('/active-ride/${match.id}');
-    } else if (match.status == 'matched' && mounted) {
-      Navigator.of(context).pushNamed('/chat/${match.id}');
+  Widget _buildDeleteExpiredButton(BuildContext context, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: ElevatedButton(
+          onPressed: _isDeletingExpired ? null : () => _deleteExpiredRides(context),
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isDeletingExpired)
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.onPrimary,
+                  ),
+                )
+              else
+                const Icon(Icons.delete_outline, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                _isDeletingExpired ? 'Deleting expired rides' : 'Delete expired rides',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteExpiredRides(BuildContext context) async {
+    if (_isDeletingExpired) {
+      return;
     }
+
+    setState(() => _isDeletingExpired = true);
+    final deleted = await ref.read(pingProvider.notifier).deleteExpiredPings();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _isDeletingExpired = false);
+
+    final message = deleted == null
+        ? 'Failed to delete expired rides. Please try again.'
+        : deleted > 0
+            ? 'Deleted $deleted expired ride${deleted == 1 ? '' : 's'}.'
+            : 'No expired rides to delete.';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }

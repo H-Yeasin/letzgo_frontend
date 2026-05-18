@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../constants/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/ping_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -109,6 +110,11 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push('/ride-history'),
           ),
           _MenuTile(
+            icon: Icons.delete_sweep_outlined,
+            title: 'Clear expired rides',
+            onTap: () => _confirmExpiredRideCleanup(context, ref),
+          ),
+          _MenuTile(
             icon: Icons.notifications_outlined,
             title: 'Notifications',
             trailing: Text(
@@ -156,6 +162,48 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _confirmExpiredRideCleanup(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Remove expired rides'),
+            content: const Text(
+              'This will permanently delete all expired rides from your profile. '
+              'Do you want to continue?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+
+    final deletedCount = await ref.read(pingProvider.notifier).deleteExpiredPings();
+    if (!context.mounted) return;
+
+    final message = deletedCount == null
+        ? 'Failed to remove expired rides. Please try again.'
+        : deletedCount > 0
+            ? 'Removed $deletedCount expired ride(s).'
+            : 'No expired rides were found.';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 }

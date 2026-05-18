@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../constants/theme.dart';
+import '../../providers/location_provider.dart';
 import '../../providers/ping_provider.dart';
-import '../../services/api_service.dart';
 import '../../widgets/ride_ping_card.dart';
 
 class DiscoverScreen extends ConsumerStatefulWidget {
@@ -21,15 +21,20 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
   double? _destLat;
   double? _destLng;
-  double _currentLat = 23.8103;
-  double _currentLng = 90.4125;
+  static const double _fallbackLat = 23.8103;
+  static const double _fallbackLng = 90.4125;
+  double _currentLat = _fallbackLat;
+  double _currentLng = _fallbackLng;
   bool _hasSearched = false;
   bool _isGeocoding = false;
 
   @override
   void initState() {
     super.initState();
-    _detectCurrentLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _detectCurrentLocation();
+      ref.read(locationProvider.notifier).refreshLocation();
+    });
   }
 
   @override
@@ -40,11 +45,14 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   }
 
   void _detectCurrentLocation() {
-    // In production, use Geolocator to get actual GPS position
+    final locationState = ref.read(locationProvider);
+    final lat = locationState.latitude ?? _currentLat;
+    final lng = locationState.longitude ?? _currentLng;
     setState(() {
-      _currentLat = 23.8103;
-      _currentLng = 90.4125;
+      _currentLat = lat;
+      _currentLng = lng;
     });
+    _mapController.move(LatLng(lat, lng), 14.0);
   }
 
   Future<void> _geocodeAndSearch(String query) async {
@@ -129,8 +137,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     ref
         .read(pingProvider.notifier)
         .findRides(
-          currentLat: _currentLat,
-          currentLng: _currentLng,
+          currentLat: ref.read(locationProvider).latitude ?? _currentLat,
+          currentLng: ref.read(locationProvider).longitude ?? _currentLng,
           destinationLat: _destLat!,
           destinationLng: _destLng!,
           radius: 500.0,
@@ -141,6 +149,19 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   Widget build(BuildContext context) {
     final pingState = ref.watch(pingProvider);
     final theme = Theme.of(context);
+    ref.listen<UserLocationState>(locationProvider, (previous, next) {
+      if (!mounted) return;
+      if (next.latitude != null && next.longitude != null) {
+        setState(() {
+          _currentLat = next.latitude!;
+          _currentLng = next.longitude!;
+        });
+        _mapController.move(
+          LatLng(next.latitude!, next.longitude!),
+          13.5,
+        );
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -253,10 +274,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 : 16,
             child: FloatingActionButton(
               heroTag: 'my_location',
-              onPressed: () {
-                _detectCurrentLocation();
-                _mapController.move(LatLng(_currentLat, _currentLng), 14.0);
-              },
+              onPressed: _detectCurrentLocation,
               backgroundColor: theme.colorScheme.surface,
               child: const Icon(
                 Icons.my_location,

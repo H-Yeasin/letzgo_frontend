@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../services/api_service.dart';
 import '../../constants/theme.dart';
 import '../../models/create_ride_ping_request.dart';
+import '../../providers/location_provider.dart';
 import '../../providers/ping_provider.dart';
+import '../../services/api_service.dart';
 
 class HostRideScreen extends ConsumerStatefulWidget {
   const HostRideScreen({super.key});
@@ -26,6 +27,9 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
   int _expiryMinutes = 30;
   bool _isSubmitting = false;
 
+  static const double _fallbackLat = 23.8103;
+  static const double _fallbackLng = 90.4125;
+
   // Map Picker State
   double? _pickupLat;
   double? _pickupLng;
@@ -34,8 +38,16 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
   final _mapController = MapController();
   String _pickingMode = 'pickup';
   bool _isReverseGeocoding = false;
-  final double _currentLat = 23.8103;
-  final double _currentLng = 90.4125;
+  double _mapCenterLat = _fallbackLat;
+  double _mapCenterLng = _fallbackLng;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(locationProvider.notifier).refreshLocation();
+    });
+  }
 
   @override
   void dispose() {
@@ -62,20 +74,24 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
     });
 
     try {
-      // Use the search API with coordinates as query for reverse-like behavior
       final coordStr =
           '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}';
       final api = ApiService();
-      final results = await api.searchLocation(coordStr, limit: 1);
 
-      String shortAddress;
-      if (results.isNotEmpty) {
-        final address = results.first['display_name'] as String;
-        final parts = address.split(',');
-        shortAddress = parts.take(3).join(',').trim();
-        if (shortAddress.isEmpty) shortAddress = address;
-      } else {
-        shortAddress = 'Selected Location';
+      String shortAddress = 'Selected Location';
+
+      try {
+        final reverseResult = await api.reverseGeocode(
+          lat: point.latitude,
+          lng: point.longitude,
+        );
+        shortAddress = _truncateAddress(reverseResult);
+      } catch (_) {
+        final results = await api.searchLocation(coordStr, limit: 1);
+        if (results.isNotEmpty) {
+          final address = results.first['display_name'] as String;
+          shortAddress = _truncateAddress(address);
+        }
       }
 
       setState(() {
@@ -98,6 +114,43 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
     } finally {
       setState(() => _isReverseGeocoding = false);
     }
+  }
+
+  void _centerMapOnLatestLocation() {
+    final locationState = ref.read(locationProvider);
+    final lat = locationState.latitude ?? _mapCenterLat;
+    final lng = locationState.longitude ?? _mapCenterLng;
+    setState(() {
+      _mapCenterLat = lat;
+      _mapCenterLng = lng;
+    });
+    _mapController.move(LatLng(lat, lng), 14.0);
+  }
+
+  void _applyLocationUpdate(UserLocationState next) {
+    if (next.latitude == null || next.longitude == null) return;
+    final lat = next.latitude!;
+    final lng = next.longitude!;
+    final shouldSetPickup = _pickupLat == null && _pickupLng == null;
+    setState(() {
+      _mapCenterLat = lat;
+      _mapCenterLng = lng;
+      if (shouldSetPickup) {
+        _pickupLat = lat;
+        _pickupLng = lng;
+      }
+    });
+    _mapController.move(LatLng(lat, lng), 13.0);
+    if (shouldSetPickup) {
+      _pickupController.text = next.displayName ??
+          '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
+    }
+  }
+
+  String _truncateAddress(String address) {
+    final parts = address.split(',');
+    final shortAddress = parts.take(3).join(',').trim();
+    return shortAddress.isEmpty ? address : shortAddress;
   }
 
   Future<void> _submitRide() async {
@@ -198,6 +251,9 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
   Widget build(BuildContext context) {
     final pingState = ref.watch(pingProvider);
     final theme = Theme.of(context);
+    ref.listen<UserLocationState>(locationProvider, (previous, next) {
+      _applyLocationUpdate(next);
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text('Host a Ride')),
@@ -239,7 +295,7 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
                           FlutterMap(
                             mapController: _mapController,
                             options: MapOptions(
-                              initialCenter: LatLng(_currentLat, _currentLng),
+                              initialCenter: LatLng(_mapCenterLat, _mapCenterLng),
                               initialZoom: 13.0,
                               onTap: (tapPosition, point) =>
                                   _handleMapTap(point),
@@ -296,12 +352,7 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
                             bottom: 8,
                             child: FloatingActionButton.small(
                               heroTag: 'host_my_location',
-                              onPressed: () {
-                                _mapController.move(
-                                  LatLng(_currentLat, _currentLng),
-                                  14.0,
-                                );
-                              },
+                              onPressed: _centerMapOnLatestLocation,
                               backgroundColor: Colors.white,
                               child: const Icon(
                                 Icons.my_location,

@@ -111,6 +111,11 @@ class ApiService {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> getMyPings() async {
+    final response = await _dio.get('/pings/me');
+    return response.data;
+  }
+
   Future<Map<String, dynamic>> getPingDetails(String pingId) async {
     final response = await _dio.get('/pings/$pingId');
     return response.data;
@@ -126,6 +131,11 @@ class ApiService {
 
   Future<Map<String, dynamic>> cancelPing(String pingId) async {
     final response = await _dio.post('/pings/$pingId/cancel');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> deleteExpiredPings() async {
+    final response = await _dio.delete('/pings/expired');
     return response.data;
   }
 
@@ -279,5 +289,19 @@ class ApiService {
       queryParameters: {'q': query, 'limit': limit},
     );
     return List<Map<String, dynamic>>.from(response.data['results'] ?? []);
+  }
+
+  Future<String> reverseGeocode({
+    required double lat,
+    required double lng,
+  }) async {
+    final response = await _dio.get(
+      '/geocode/reverse',
+      queryParameters: {
+        'lat': lat.toString(),
+        'lng': lng.toString(),
+      },
+    );
+    return response.data['display_name'] as String;
   }
 }
