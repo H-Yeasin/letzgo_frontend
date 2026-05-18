@@ -169,22 +169,27 @@ class ApiService {
     return response.data;
   }
 
-  Future<Map<String, dynamic>> getMatchRequests(String rideId) async {
-    final response = await _dio.get('/matches/requests/$rideId');
-    return response.data;
+  Future<List<dynamic>> getMatchRequests(String rideId) async {
+    final response = await _dio.get('/pings/$rideId/requests');
+    return response.data as List<dynamic>;
   }
 
   Future<Map<String, dynamic>> respondToRequest(
     String requestId,
     String status,
   ) async {
-    final response = await _dio.post('/matches/requests/$requestId/$status');
+    final normalized = status.toLowerCase();
+    final action = normalized == 'accept' || normalized == 'accepted'
+        ? 'accept'
+        : 'decline';
+    final response =
+        await _dio.post('/matches/request/$requestId/$action');
     return response.data;
   }
 
-  Future<Map<String, dynamic>> getMyMatches() async {
-    final response = await _dio.get('/matches/my');
-    return response.data;
+  Future<List<dynamic>> getMyMatches() async {
+    final response = await _dio.get('/matches');
+    return response.data as List<dynamic>;
   }
 
   Future<Map<String, dynamic>> getMatchDetails(String matchId) async {

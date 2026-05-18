@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'user.dart';
 
 class RidePing {
@@ -45,8 +47,13 @@ class RidePing {
       (maxPassengers - currentPassengers).clamp(0, maxPassengers);
 
   factory RidePing.fromJson(Map<String, dynamic> json) {
+    final idValue = json['id'] ?? json['ride_id'];
+    if (idValue == null) {
+      throw ArgumentError('Missing ride identifier');
+    }
+
     return RidePing(
-      id: json['id'] as String,
+      id: idValue.toString(),
       hostId: json['host_id'] as String,
       pickupLabel: json['pickup_label'] as String,
       destinationLabel: json['destination_label'] as String,
@@ -64,7 +71,11 @@ class RidePing {
       expiresAt: DateTime.parse(json['expires_at'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
       host: json['host'] != null
-          ? PublicUserProfile.fromJson(json['host'] as Map<String, dynamic>)
+          ? PublicUserProfile.fromJson(
+              Map<String, dynamic>.from(
+                json['host'] as Map<String, dynamic>,
+              ),
+            )
           : null,
     );
   }
@@ -117,23 +128,31 @@ class Match {
 class MatchRequest {
   final String id;
   final String rideId;
-  final String guestId;
+  final String? guestId;
+  final PublicUserProfile? guest;
   final String status;
   final DateTime createdAt;
 
   MatchRequest({
     required this.id,
     required this.rideId,
-    required this.guestId,
+    this.guestId,
+    this.guest,
     required this.status,
     required this.createdAt,
   });
 
   factory MatchRequest.fromJson(Map<String, dynamic> json) {
+    final guestData = json['guest'];
     return MatchRequest(
       id: json['id'] as String,
       rideId: json['ride_id'] as String,
-      guestId: json['guest_id'] as String,
+      guestId: json['guest_id'] as String?,
+      guest: guestData != null
+          ? PublicUserProfile.fromJson(
+              Map<String, dynamic>.from(guestData as Map),
+            )
+          : null,
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
@@ -188,13 +207,28 @@ class Notification {
   });
 
   factory Notification.fromJson(Map<String, dynamic> json) {
+    String? relatedId = json['related_id'] as String?;
+    final dataRaw = json['data'];
+    if (relatedId == null && dataRaw != null) {
+      try {
+        final decoded = dataRaw is String ? jsonDecode(dataRaw) : dataRaw;
+        if (decoded is Map) {
+          final candidate = decoded['related_id'] ??
+              decoded['ride_id'] ??
+              decoded['match_id'];
+          relatedId = candidate?.toString();
+        }
+      } catch (_) {
+        relatedId = null;
+      }
+    }
     return Notification(
       id: json['id'] as String,
       userId: json['user_id'] as String,
       type: json['type'] as String,
       title: json['title'] as String,
       body: json['body'] as String,
-      relatedId: json['related_id'] as String?,
+      relatedId: relatedId,
       isRead: json['is_read'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
     );

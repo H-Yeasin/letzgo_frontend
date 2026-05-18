@@ -75,12 +75,22 @@ class PublicUserProfile {
   });
 
   factory PublicUserProfile.fromJson(Map<String, dynamic> json) {
+    final rawName = json['name'] as String?;
+    final fallbackName = json['full_name'] as String?;
+    final normalized = (rawName ?? fallbackName)?.trim();
+    final name = normalized != null && normalized.isNotEmpty
+        ? normalized
+        : 'Rider';
+
+    final ratingValue =
+        (json['rating_avg'] ?? json['rating']) as num?;
+
     return PublicUserProfile(
       id: json['id'] as String,
-      name: json['name'] as String,
+      name: name,
       gender: json['gender'] as String?,
       avatarUrl: json['avatar_url'] as String?,
-      ratingAvg: (json['rating_avg'] as num?)?.toDouble() ?? 0.0,
+      ratingAvg: ratingValue?.toDouble() ?? 0.0,
       completedRidesCount:
           (json['completed_rides_count'] as num?)?.toInt() ?? 0,
       isVerified: json['is_verified'] as bool? ?? false,
