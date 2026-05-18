@@ -26,11 +26,8 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final phone = _phoneController.text.trim();
-    await ref.read(authProvider.notifier).sendOtp(phone);
-
-    if (mounted && ref.read(authProvider).error == null) {
-      context.push('/otp-verification', extra: phone);
-    }
+    // In development phase, directly verify the phone number with the default dev OTP '123456'
+    await ref.read(authProvider.notifier).verifyOtp(phone, '123456');
   }
 
   @override
@@ -132,7 +129,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('Send OTP'),
+                        : const Text('Continue'),
                   ),
                 ),
                 const Spacer(),
