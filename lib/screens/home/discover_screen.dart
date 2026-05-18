@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../constants/theme.dart';
 import '../../providers/ping_provider.dart';
+import '../../services/api_service.dart';
 import '../../widgets/ride_ping_card.dart';
 
 class DiscoverScreen extends ConsumerStatefulWidget {
@@ -13,17 +16,125 @@ class DiscoverScreen extends ConsumerStatefulWidget {
 }
 
 class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
+  final _destinationController = TextEditingController();
+  final _mapController = MapController();
+
+  double? _destLat;
+  double? _destLng;
+  double _currentLat = 23.8103;
+  double _currentLng = 90.4125;
+  bool _hasSearched = false;
+  bool _isGeocoding = false;
+
   @override
   void initState() {
     super.initState();
-    _loadNearbyPings();
+    _detectCurrentLocation();
   }
 
-  void _loadNearbyPings() {
-    // In production, get user's actual location
+  @override
+  void dispose() {
+    _destinationController.dispose();
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  void _detectCurrentLocation() {
+    // In production, use Geolocator to get actual GPS position
+    setState(() {
+      _currentLat = 23.8103;
+      _currentLng = 90.4125;
+    });
+  }
+
+  Future<void> _geocodeAndSearch(String query) async {
+    final value = query.trim();
+    if (value.isEmpty) return;
+
+    // Direct lat,lng check
+    if (value.contains(',')) {
+      final parts = value.split(',');
+      if (parts.length == 2) {
+        final lat = double.tryParse(parts[0].trim());
+        final lng = double.tryParse(parts[1].trim());
+        if (lat != null && lng != null) {
+          _setDestination(lat, lng);
+          return;
+        }
+      }
+    }
+
+    setState(() => _isGeocoding = true);
+
+    try {
+      final api = ref.read(apiServiceProvider);
+      final results = await api.searchLocation(value);
+
+      if (results.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not find location: $value')),
+          );
+        }
+        return;
+      }
+
+      // Use the first result
+      final result = results.first;
+      final lat = (result['lat'] as num).toDouble();
+      final lng = (result['lng'] as num).toDouble();
+
+      _setDestination(lat, lng);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not find location: $value')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGeocoding = false);
+      }
+    }
+  }
+
+  void _setDestination(double lat, double lng) {
+    setState(() {
+      _destLat = lat;
+      _destLng = lng;
+    });
+
+    // Move map to center on destination
+    _mapController.move(LatLng(lat, lng), 14.0);
+
+    _searchRides();
+  }
+
+  void _onMapTap(TapPosition tapPosition, LatLng point) {
+    _destinationController.text =
+        '${point.latitude.toStringAsFixed(4)}, ${point.longitude.toStringAsFixed(4)}';
+    _setDestination(point.latitude, point.longitude);
+  }
+
+  void _searchRides() {
+    if (_destLat == null || _destLng == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a destination first')),
+      );
+      return;
+    }
+
+    setState(() => _hasSearched = true);
+
     ref
         .read(pingProvider.notifier)
-        .fetchNearbyPings(lat: 23.8103, lng: 90.4125, radius: 2000.0);
+        .findRides(
+          currentLat: _currentLat,
+          currentLng: _currentLng,
+          destinationLat: _destLat!,
+          destinationLng: _destLng!,
+          radius: 500.0,
+        );
   }
 
   @override
@@ -33,123 +144,265 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Discover Rides'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadNearbyPings,
-          ),
-          IconButton(
-            icon: Badge(isLabelVisible: false, child: const Icon(Icons.tune)),
-            onPressed: () => _showFilterSheet(context),
-          ),
-        ],
+        title: const Text('Find a Ride'),
+        backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.9),
+        elevation: 0,
       ),
-      body: RefreshIndicator(
-        onRefresh: () async => _loadNearbyPings(),
-        child: pingState.isLoading && pingState.nearbyPings.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : pingState.nearbyPings.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.explore_outlined,
-                        size: 80,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No rides found nearby',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: AppTheme.lightTextColor,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Try expanding your search radius or host a ride!',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.lightTextColor,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      FilledButton.icon(
-                        onPressed: () => context.push('/host-ride'),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Host a Ride'),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: pingState.nearbyPings.length,
-                itemBuilder: (context, index) {
-                  final ping = pingState.nearbyPings[index];
-                  return RidePingCard(
-                    ping: ping,
-                    onTap: () => context.push('/ride-details/${ping.id}'),
-                  );
-                },
+      body: Stack(
+        children: [
+          // 1. The Map
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: LatLng(_currentLat, _currentLng),
+              initialZoom: 13.0,
+              onTap: _onMapTap,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.letzgo.app',
               ),
+              MarkerLayer(
+                markers: [
+                  // Current location marker
+                  Marker(
+                    point: LatLng(_currentLat, _currentLng),
+                    width: 40,
+                    height: 40,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primaryColor,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Destination marker
+                  if (_destLat != null && _destLng != null)
+                    Marker(
+                      point: LatLng(_destLat!, _destLng!),
+                      width: 50,
+                      height: 50,
+                      alignment: Alignment.topCenter,
+                      child: const Icon(
+                        Icons.location_on,
+                        color: AppTheme.secondaryColor,
+                        size: 40,
+                      ),
+                    ),
+                  // Nearby Ride pins (Results)
+                  for (final ping in pingState.findResults)
+                    Marker(
+                      point: LatLng(ping.pickupLat, ping.pickupLng),
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.topCenter,
+                      child: GestureDetector(
+                        onTap: () => context.push('/ride-details/${ping.id}'),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(color: Colors.black26, blurRadius: 4),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.directions_car,
+                            color: AppTheme.primaryColor,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+
+          // 2. Top Search Bar (Floating)
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: _buildFloatingSearchBar(theme),
+          ),
+
+          // 3. My Location Button
+          Positioned(
+            right: 16,
+            bottom: _hasSearched
+                ? (MediaQuery.of(context).size.height * 0.4) + 16
+                : 16,
+            child: FloatingActionButton(
+              heroTag: 'my_location',
+              onPressed: () {
+                _detectCurrentLocation();
+                _mapController.move(LatLng(_currentLat, _currentLng), 14.0);
+              },
+              backgroundColor: theme.colorScheme.surface,
+              child: const Icon(
+                Icons.my_location,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ),
+
+          // 4. Bottom Results Sheet
+          if (_hasSearched)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildDraggableResults(theme, pingState),
+            ),
+        ],
       ),
     );
   }
 
-  void _showFilterSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  Widget _buildFloatingSearchBar(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Filter Rides',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+      child: Row(
+        children: [
+          const Icon(Icons.location_on, color: AppTheme.secondaryColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _destinationController,
+              decoration: InputDecoration(
+                hintText: 'Where to? (e.g. Mirpur)',
+                border: InputBorder.none,
+                isDense: false,
+                hintStyle: TextStyle(
+                  color: AppTheme.lightTextColor.withValues(alpha: 0.6),
+                ),
+              ),
+              onSubmitted: _geocodeAndSearch,
             ),
-            const SizedBox(height: 24),
-            const Text('Gender Preference'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: ['Any', 'Male', 'Female']
-                  .map(
-                    (g) => FilterChip(
-                      label: Text(g),
-                      selected: true,
-                      onSelected: (_) {},
-                    ),
-                  )
-                  .toList(),
+          ),
+          if (_isGeocoding)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.search, color: AppTheme.primaryColor),
+              onPressed: () => _geocodeAndSearch(_destinationController.text),
             ),
-            const SizedBox(height: 24),
-            const Text('Max Fare'),
-            const SizedBox(height: 8),
-            const Slider(value: 5000, max: 5000, onChanged: null),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Apply Filters'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDraggableResults(ThemeData theme, PingState pingState) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.4,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.dividerColor,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-          ],
-        ),
+          ),
+
+          Expanded(
+            child: pingState.isFindLoading
+                ? const Center(child: CircularProgressIndicator())
+                : pingState.findResults.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 48,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text('No rides found here.'),
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            onPressed: () => context.push('/host-ride'),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Host a Ride Instead'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    itemCount: pingState.findResults.length,
+                    itemBuilder: (context, index) {
+                      final ping = pingState.findResults[index];
+                      return RidePingCard(
+                        ping: ping,
+                        onTap: () => context.push('/ride-details/${ping.id}'),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }

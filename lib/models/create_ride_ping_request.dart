@@ -1,5 +1,5 @@
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
+import '../services/api_service.dart';
 
 class CreateRidePingRequest {
   final String pickupLabel;
@@ -47,15 +47,17 @@ class CreateRidePingRequest {
     return map;
   }
 
-  /// Try to geocode a text address to coordinates.
+  /// Try to geocode a text address to coordinates using backend geocoder.
   /// Returns null if geocoding fails (caller should use a fallback or stop).
   static Future<Position?> geocodeAddress(String address) async {
     try {
-      final locations = await locationFromAddress(address);
-      if (locations.isNotEmpty) {
+      final results = await ApiService().searchLocation(address, limit: 1);
+      if (results.isNotEmpty) {
+        final lat = (results.first['lat'] as num).toDouble();
+        final lng = (results.first['lng'] as num).toDouble();
         return Position(
-          longitude: locations.first.longitude,
-          latitude: locations.first.latitude,
+          longitude: lng,
+          latitude: lat,
           timestamp: DateTime.now(),
           accuracy: 0,
           altitude: 0,

@@ -38,16 +38,26 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     setState(() => _isLoading = true);
     try {
-      // TODO: Implement profile update API call
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) {
+      final success = await ref.read(authProvider.notifier).updateProfile(
+            name: _nameController.text.trim(),
+            gender: _selectedGender,
+          );
+      if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Profile updated'),
+            content: Text('Profile updated successfully'),
             backgroundColor: AppTheme.successColor,
           ),
         );
         context.pop();
+      } else if (mounted) {
+        final error = ref.read(authProvider).error ?? 'Failed to update profile. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

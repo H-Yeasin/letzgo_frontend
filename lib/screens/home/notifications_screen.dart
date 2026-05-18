@@ -17,7 +17,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(notificationProvider.notifier).fetchNotifications();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationProvider.notifier).fetchNotifications();
+    });
   }
 
   @override

@@ -17,7 +17,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadNearbyRides();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadNearbyRides();
+    });
   }
 
   void _loadNearbyRides() {
@@ -136,7 +138,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     icon: Icons.person_search,
                     label: 'Find a Ride',
                     color: AppTheme.secondaryColor,
-                    onTap: () => context.push('/find-ride'),
+                    onTap: () => context.push('/discover'),
                   ),
                 ),
               ],

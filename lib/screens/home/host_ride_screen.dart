@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../../services/api_service.dart';
 import '../../constants/theme.dart';
 import '../../models/create_ride_ping_request.dart';
 import '../../providers/ping_provider.dart';
@@ -22,6 +24,18 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
   String _genderPref = 'any';
   int _passengerLimit = 1;
   int _expiryMinutes = 30;
+  bool _isSubmitting = false;
+
+  // Map Picker State
+  double? _pickupLat;
+  double? _pickupLng;
+  double? _destLat;
+  double? _destLng;
+  final _mapController = MapController();
+  String _pickingMode = 'pickup';
+  bool _isReverseGeocoding = false;
+  final double _currentLat = 23.8103;
+  final double _currentLng = 90.4125;
 
   @override
   void dispose() {
@@ -29,76 +43,154 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
     _destinationController.dispose();
     _fareController.dispose();
     _meetupController.dispose();
+    _mapController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleMapTap(LatLng point) async {
+    setState(() {
+      if (_pickingMode == 'pickup') {
+        _pickupLat = point.latitude;
+        _pickupLng = point.longitude;
+        _pickupController.text = 'Loading address...';
+      } else {
+        _destLat = point.latitude;
+        _destLng = point.longitude;
+        _destinationController.text = 'Loading address...';
+      }
+      _isReverseGeocoding = true;
+    });
+
+    try {
+      // Use the search API with coordinates as query for reverse-like behavior
+      final coordStr =
+          '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}';
+      final api = ApiService();
+      final results = await api.searchLocation(coordStr, limit: 1);
+
+      String shortAddress;
+      if (results.isNotEmpty) {
+        final address = results.first['display_name'] as String;
+        final parts = address.split(',');
+        shortAddress = parts.take(3).join(',').trim();
+        if (shortAddress.isEmpty) shortAddress = address;
+      } else {
+        shortAddress = 'Selected Location';
+      }
+
+      setState(() {
+        if (_pickingMode == 'pickup') {
+          _pickupController.text = shortAddress;
+        } else {
+          _destinationController.text = shortAddress;
+        }
+      });
+    } catch (e) {
+      final coordStr =
+          '${point.latitude.toStringAsFixed(4)}, ${point.longitude.toStringAsFixed(4)}';
+      setState(() {
+        if (_pickingMode == 'pickup') {
+          _pickupController.text = 'Selected Pickup ($coordStr)';
+        } else {
+          _destinationController.text = 'Selected Destination ($coordStr)';
+        }
+      });
+    } finally {
+      setState(() => _isReverseGeocoding = false);
+    }
   }
 
   Future<void> _submitRide() async {
     if (!_formKey.currentState!.validate()) return;
     if (!mounted) return;
 
-    // Resolve pickup area to coordinates via geocoding
-    final pickupAddress = _pickupController.text.trim();
-    final position = await CreateRidePingRequest.geocodeAddress(pickupAddress);
+    setState(() => _isSubmitting = true);
 
-    if (!mounted) return;
-
-    if (position == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Could not find the pickup location. Please be more specific.',
-          ),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
-      return;
-    }
-
-    // Optional: try to geocode destination as well
-    double? destLat;
-    double? destLng;
     try {
-      final destLocations = await locationFromAddress(
-        _destinationController.text.trim(),
-      );
-      if (destLocations.isNotEmpty) {
-        destLat = destLocations.first.latitude;
-        destLng = destLocations.first.longitude;
+      double? finalPickupLat = _pickupLat;
+      double? finalPickupLng = _pickupLng;
+      final pickupAddress = _pickupController.text.trim();
+
+      // If map selection wasn't used or cleared, try geocoding
+      if (finalPickupLat == null || finalPickupLng == null) {
+        final position = await CreateRidePingRequest.geocodeAddress(
+          pickupAddress,
+        );
+        if (position != null) {
+          finalPickupLat = position.latitude;
+          finalPickupLng = position.longitude;
+        }
       }
-    } catch (_) {
-      // Destination geocoding is optional – proceed without it
-    }
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final request = CreateRidePingRequest(
-      pickupLabel: pickupAddress,
-      destinationLabel: _destinationController.text.trim(),
-      pickupLat: position.latitude,
-      pickupLng: position.longitude,
-      destinationLat: destLat,
-      destinationLng: destLng,
-      estimatedFare: double.parse(_fareController.text.trim()),
-      genderPreference: _genderPref,
-      maxPassengers: _passengerLimit,
-      meetupPoint: _meetupController.text.trim().isEmpty
-          ? null
-          : _meetupController.text.trim(),
-      expiresInMinutes: _expiryMinutes,
-    );
+      if (finalPickupLat == null || finalPickupLng == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not find the pickup location. Please be more specific or tap the map.',
+            ),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+        setState(() => _isSubmitting = false);
+        return;
+      }
 
-    final ping = await ref
-        .read(pingProvider.notifier)
-        .createPing(request.toJson());
+      double? finalDestLat = _destLat;
+      double? finalDestLng = _destLng;
+      final destAddress = _destinationController.text.trim();
 
-    if (ping != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ride created successfully!'),
-          backgroundColor: AppTheme.successColor,
-        ),
+      if (finalDestLat == null || finalDestLng == null) {
+        try {
+          final results = await ApiService().searchLocation(
+            destAddress,
+            limit: 1,
+          );
+          if (results.isNotEmpty) {
+            finalDestLat = (results.first['lat'] as num).toDouble();
+            finalDestLng = (results.first['lng'] as num).toDouble();
+          }
+        } catch (_) {
+          // Destination geocoding is optional – proceed without it
+        }
+      }
+
+      if (!mounted) return;
+
+      final request = CreateRidePingRequest(
+        pickupLabel: pickupAddress,
+        destinationLabel: destAddress,
+        pickupLat: finalPickupLat,
+        pickupLng: finalPickupLng,
+        destinationLat: finalDestLat,
+        destinationLng: finalDestLng,
+        estimatedFare: double.parse(_fareController.text.trim()),
+        genderPreference: _genderPref,
+        maxPassengers: _passengerLimit,
+        meetupPoint: _meetupController.text.trim().isEmpty
+            ? null
+            : _meetupController.text.trim(),
+        expiresInMinutes: _expiryMinutes,
       );
-      context.pop();
+
+      final ping = await ref
+          .read(pingProvider.notifier)
+          .createPing(request.toJson());
+
+      if (ping != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ride created successfully!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+        context.pop();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -130,6 +222,163 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+
+              // Interactive Map Picker
+              Card(
+                clipBehavior: Clip.antiAlias,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 220,
+                      child: Stack(
+                        children: [
+                          FlutterMap(
+                            mapController: _mapController,
+                            options: MapOptions(
+                              initialCenter: LatLng(_currentLat, _currentLng),
+                              initialZoom: 13.0,
+                              onTap: (tapPosition, point) =>
+                                  _handleMapTap(point),
+                            ),
+                            children: [
+                              TileLayer(
+                                urlTemplate:
+                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                userAgentPackageName: 'com.letzgo.app',
+                              ),
+                              MarkerLayer(
+                                markers: [
+                                  // Pickup Marker (Green)
+                                  if (_pickupLat != null && _pickupLng != null)
+                                    Marker(
+                                      point: LatLng(_pickupLat!, _pickupLng!),
+                                      width: 40,
+                                      height: 40,
+                                      alignment: Alignment.topCenter,
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        color: Colors.green,
+                                        size: 36,
+                                      ),
+                                    ),
+                                  // Destination Marker (Red/Secondary)
+                                  if (_destLat != null && _destLng != null)
+                                    Marker(
+                                      point: LatLng(_destLat!, _destLng!),
+                                      width: 40,
+                                      height: 40,
+                                      alignment: Alignment.topCenter,
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        color: AppTheme.secondaryColor,
+                                        size: 36,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          // Loading indicator when reverse geocoding
+                          if (_isReverseGeocoding)
+                            Container(
+                              color: Colors.black26,
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                          // Floating Reset/My Location Button on the map
+                          Positioned(
+                            right: 8,
+                            bottom: 8,
+                            child: FloatingActionButton.small(
+                              heroTag: 'host_my_location',
+                              onPressed: () {
+                                _mapController.move(
+                                  LatLng(_currentLat, _currentLng),
+                                  14.0,
+                                );
+                              },
+                              backgroundColor: Colors.white,
+                              child: const Icon(
+                                Icons.my_location,
+                                color: AppTheme.primaryColor,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Selecting Mode Controller
+                    Container(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.3),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 16,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Tap map to set:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: SegmentedButton<String>(
+                              showSelectedIcon: false,
+                              style: SegmentedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              segments: const [
+                                ButtonSegment(
+                                  value: 'pickup',
+                                  label: Text(
+                                    'Pickup',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  icon: Icon(
+                                    Icons.trip_origin,
+                                    size: 14,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                                ButtonSegment(
+                                  value: 'destination',
+                                  label: Text(
+                                    'Dest',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  icon: Icon(
+                                    Icons.location_on,
+                                    size: 14,
+                                    color: AppTheme.secondaryColor,
+                                  ),
+                                ),
+                              ],
+                              selected: {_pickingMode},
+                              onSelectionChanged: (set) =>
+                                  setState(() => _pickingMode = set.first),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
 
               TextFormField(
                 controller: _pickupController,
@@ -275,8 +524,8 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: pingState.isLoading ? null : _submitRide,
-                  child: pingState.isLoading
+                  onPressed: _isSubmitting ? null : _submitRide,
+                  child: _isSubmitting
                       ? const SizedBox(
                           height: 20,
                           width: 20,

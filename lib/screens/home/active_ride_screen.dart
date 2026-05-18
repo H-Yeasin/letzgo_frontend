@@ -19,7 +19,9 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(matchProvider.notifier).getMatchDetails(widget.matchId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(matchProvider.notifier).getMatchDetails(widget.matchId);
+    });
   }
 
   @override

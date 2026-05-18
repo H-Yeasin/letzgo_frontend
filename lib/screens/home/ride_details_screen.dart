@@ -20,7 +20,9 @@ class _RideDetailsScreenState extends ConsumerState<RideDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(pingProvider.notifier).getPingDetails(widget.pingId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(pingProvider.notifier).getPingDetails(widget.pingId);
+    });
   }
 
   @override

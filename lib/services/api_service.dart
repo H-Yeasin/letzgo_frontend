@@ -2,10 +2,16 @@ import 'package:dio/dio.dart';
 import '../constants/app_constants.dart';
 
 class ApiService {
+  static final ApiService _instance = ApiService._internal();
+
+  factory ApiService() {
+    return _instance;
+  }
+
   late final Dio _dio;
   String? _authToken;
 
-  ApiService() {
+  ApiService._internal() {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConstants.baseUrl,
@@ -260,5 +266,18 @@ class ApiService {
   Future<Map<String, dynamic>> submitReport(Map<String, dynamic> data) async {
     final response = await _dio.post('/reports', data: data);
     return response.data;
+  }
+
+  // ============= Geocode Endpoints =============
+
+  Future<List<Map<String, dynamic>>> searchLocation(
+    String query, {
+    int limit = 5,
+  }) async {
+    final response = await _dio.get(
+      '/geocode/search',
+      queryParameters: {'q': query, 'limit': limit},
+    );
+    return List<Map<String, dynamic>>.from(response.data['results'] ?? []);
   }
 }

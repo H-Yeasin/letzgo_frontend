@@ -104,7 +104,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         isAuthenticated: true,
         user: user,
-        isNewUser: isNew,
+        isNewUser: isNew || !user.isOnboardingComplete,
         pendingPhone: null,
       );
     } catch (e) {
@@ -120,12 +120,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String? gender,
     String? avatarUrl,
   }) async {
-    if (state.pendingPhone == null) return;
+    final phone = state.pendingPhone ?? state.user?.phone;
+    if (phone == null) {
+      state = state.copyWith(error: 'Phone number not found.');
+      return;
+    }
 
     state = state.copyWith(isLoading: true, error: null);
     try {
       final data = await _api.completeRegistration(
-        phone: state.pendingPhone!,
+        phone: phone,
         name: name,
         gender: gender,
         avatarUrl: avatarUrl,
@@ -149,6 +153,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         error: 'Failed to create profile. Please try again.',
       );
+    }
+  }
+
+  Future<bool> updateProfile({
+    required String name,
+    String? gender,
+    String? avatarUrl,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final updateData = <String, dynamic>{
+        'name': name,
+        'is_onboarding_complete': true,
+      };
+      if (gender != null) updateData['gender'] = gender;
+      if (avatarUrl != null) updateData['avatar_url'] = avatarUrl;
+
+      final data = await _api.updateProfile(updateData);
+      final updatedUser = User.fromJson(data);
+
+      state = state.copyWith(
+        isLoading: false,
+        user: updatedUser,
+        isNewUser: !updatedUser.isOnboardingComplete,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update profile. Please try again.',
+      );
+      return false;
     }
   }
 

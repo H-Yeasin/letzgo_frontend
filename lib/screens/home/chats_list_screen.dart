@@ -16,7 +16,9 @@ class _ChatsListScreenState extends ConsumerState<ChatsListScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(matchProvider.notifier).fetchMyMatches();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(matchProvider.notifier).fetchMyMatches();
+    });
   }
 
   @override

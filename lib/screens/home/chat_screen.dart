@@ -21,9 +21,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    ref
-        .read(chatProvider(widget.matchId).notifier)
-        .fetchMessages(widget.matchId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(chatProvider(widget.matchId).notifier)
+          .fetchMessages(widget.matchId);
+    });
   }
 
   @override
