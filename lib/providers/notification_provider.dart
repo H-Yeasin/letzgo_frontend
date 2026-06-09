@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:letzgo_app/providers/api_provider.dart';
 import '../models/ride_ping.dart';
 import '../services/api_service.dart';
-import 'ping_provider.dart';
 
 class NotificationState {
   final bool isLoading;

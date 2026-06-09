@@ -5,9 +5,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../constants/theme.dart';
 import '../../models/create_ride_ping_request.dart';
+import '../../providers/api_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/ping_provider.dart';
-import '../../services/api_service.dart';
+import 'widgets/host_ride_fields.dart';
+import 'widgets/host_ride_map_picker.dart';
+import 'widgets/ride_preference_controls.dart';
 
 class HostRideScreen extends ConsumerStatefulWidget {
   const HostRideScreen({super.key});
@@ -76,7 +79,7 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
     try {
       final coordStr =
           '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}';
-      final api = ApiService();
+      final api = ref.read(apiServiceProvider);
 
       String shortAddress = 'Selected Location';
 
@@ -196,7 +199,7 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
 
       if (finalDestLat == null || finalDestLng == null) {
         try {
-          final results = await ApiService().searchLocation(
+          final results = await ref.read(apiServiceProvider).searchLocation(
             destAddress,
             limit: 1,
           );
@@ -279,285 +282,41 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Interactive Map Picker
-              Card(
-                clipBehavior: Clip.antiAlias,
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 220,
-                      child: Stack(
-                        children: [
-                          FlutterMap(
-                            mapController: _mapController,
-                            options: MapOptions(
-                              initialCenter: LatLng(_mapCenterLat, _mapCenterLng),
-                              initialZoom: 13.0,
-                              onTap: (tapPosition, point) =>
-                                  _handleMapTap(point),
-                            ),
-                            children: [
-                              TileLayer(
-                                urlTemplate:
-                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                userAgentPackageName: 'com.letzgo.app',
-                              ),
-                              MarkerLayer(
-                                markers: [
-                                  // Pickup Marker (Green)
-                                  if (_pickupLat != null && _pickupLng != null)
-                                    Marker(
-                                      point: LatLng(_pickupLat!, _pickupLng!),
-                                      width: 40,
-                                      height: 40,
-                                      alignment: Alignment.topCenter,
-                                      child: const Icon(
-                                        Icons.location_on,
-                                        color: Colors.green,
-                                        size: 36,
-                                      ),
-                                    ),
-                                  // Destination Marker (Red/Secondary)
-                                  if (_destLat != null && _destLng != null)
-                                    Marker(
-                                      point: LatLng(_destLat!, _destLng!),
-                                      width: 40,
-                                      height: 40,
-                                      alignment: Alignment.topCenter,
-                                      child: const Icon(
-                                        Icons.location_on,
-                                        color: AppTheme.secondaryColor,
-                                        size: 36,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          // Loading indicator when reverse geocoding
-                          if (_isReverseGeocoding)
-                            Container(
-                              color: Colors.black26,
-                              child: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            ),
-                          // Floating Reset/My Location Button on the map
-                          Positioned(
-                            right: 8,
-                            bottom: 8,
-                            child: FloatingActionButton.small(
-                              heroTag: 'host_my_location',
-                              onPressed: _centerMapOnLatestLocation,
-                              backgroundColor: Colors.white,
-                              child: const Icon(
-                                Icons.my_location,
-                                color: AppTheme.primaryColor,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Selecting Mode Controller
-                    Container(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.3),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 16,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Tap map to set:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: SegmentedButton<String>(
-                              showSelectedIcon: false,
-                              style: SegmentedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              segments: const [
-                                ButtonSegment(
-                                  value: 'pickup',
-                                  label: Text(
-                                    'Pickup',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                  icon: Icon(
-                                    Icons.trip_origin,
-                                    size: 14,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                                ButtonSegment(
-                                  value: 'destination',
-                                  label: Text(
-                                    'Dest',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                  icon: Icon(
-                                    Icons.location_on,
-                                    size: 14,
-                                    color: AppTheme.secondaryColor,
-                                  ),
-                                ),
-                              ],
-                              selected: {_pickingMode},
-                              onSelectionChanged: (set) =>
-                                  setState(() => _pickingMode = set.first),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              HostRideMapPicker(
+                mapController: _mapController,
+                initialCenter: LatLng(_mapCenterLat, _mapCenterLng),
+                pickupPoint: _pickupLat != null && _pickupLng != null
+                    ? LatLng(_pickupLat!, _pickupLng!)
+                    : null,
+                destinationPoint: _destLat != null && _destLng != null
+                    ? LatLng(_destLat!, _destLng!)
+                    : null,
+                pickingMode: _pickingMode,
+                isLoadingAddress: _isReverseGeocoding,
+                onMapTap: _handleMapTap,
+                onCenterOnLocation: _centerMapOnLatestLocation,
+                onPickingModeChanged: (value) =>
+                    setState(() => _pickingMode = value),
               ),
               const SizedBox(height: 16),
 
-              TextFormField(
-                controller: _pickupController,
-                decoration: const InputDecoration(
-                  labelText: 'Pickup Area',
-                  hintText: 'e.g., Gulshan 1',
-                  prefixIcon: Icon(Icons.trip_origin),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter pickup area';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _destinationController,
-                decoration: const InputDecoration(
-                  labelText: 'Destination',
-                  hintText: 'e.g., Banani 11',
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter destination';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _fareController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Estimated Fare (৳)',
-                  hintText: 'e.g., 200',
-                  prefixIcon: Icon(Icons.monetization_on),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter estimated fare';
-                  }
-                  final fare = double.tryParse(value.trim());
-                  if (fare == null || fare <= 0) {
-                    return 'Please enter a valid fare';
-                  }
-                  if (fare > 5000) {
-                    return 'Fare cannot exceed ৳5,000';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _meetupController,
-                decoration: const InputDecoration(
-                  labelText: 'Meetup Point (optional)',
-                  hintText: 'e.g., Near Starbucks',
-                  prefixIcon: Icon(Icons.flag),
-                ),
+              HostRideFields(
+                pickupController: _pickupController,
+                destinationController: _destinationController,
+                fareController: _fareController,
+                meetupController: _meetupController,
               ),
               const SizedBox(height: 24),
 
-              // Gender preference
-              Text(
-                'Gender Preference',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'any', label: Text('Any')),
-                  ButtonSegment(value: 'male', label: Text('Male')),
-                  ButtonSegment(value: 'female', label: Text('Female')),
-                ],
-                selected: {_genderPref},
-                onSelectionChanged: (set) =>
-                    setState(() => _genderPref = set.first),
-              ),
-              const SizedBox(height: 24),
-
-              // Passenger limit
-              Row(
-                children: [
-                  Text(
-                    'Passenger Limit: $_passengerLimit',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: _passengerLimit > 1
-                        ? () => setState(() => _passengerLimit--)
-                        : null,
-                    icon: const Icon(Icons.remove_circle_outline),
-                  ),
-                  Text('$_passengerLimit', style: theme.textTheme.titleLarge),
-                  IconButton(
-                    onPressed: _passengerLimit < 5
-                        ? () => setState(() => _passengerLimit++)
-                        : null,
-                    icon: const Icon(Icons.add_circle_outline),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Expiry time
-              Text(
-                'Expires in: $_expiryMinutes minutes',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Slider(
-                value: _expiryMinutes.toDouble(),
-                min: 10,
-                max: 120,
-                divisions: 11,
-                label: '$_expiryMinutes min',
-                onChanged: (v) => setState(() => _expiryMinutes = v.toInt()),
+              RidePreferenceControls(
+                genderPreference: _genderPref,
+                passengerLimit: _passengerLimit,
+                expiryMinutes: _expiryMinutes,
+                onGenderChanged: (value) => setState(() => _genderPref = value),
+                onPassengerLimitChanged: (value) =>
+                    setState(() => _passengerLimit = value),
+                onExpiryChanged: (value) =>
+                    setState(() => _expiryMinutes = value),
               ),
 
               if (pingState.error != null) ...[

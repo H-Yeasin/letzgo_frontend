@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+
 import '../../constants/theme.dart';
-import '../../providers/ping_provider.dart';
-import '../../providers/match_provider.dart';
+import '../../models/ride_ping.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/match_provider.dart';
+import '../../providers/ping_provider.dart';
+import 'widgets/ride_details_sections.dart';
 
 class RideDetailsScreen extends ConsumerStatefulWidget {
-  final String pingId;
-
   const RideDetailsScreen({super.key, required this.pingId});
+
+  final String pingId;
 
   @override
   ConsumerState<RideDetailsScreen> createState() => _RideDetailsScreenState();
@@ -28,221 +30,104 @@ class _RideDetailsScreenState extends ConsumerState<RideDetailsScreen> {
     });
   }
 
+  Future<void> _respondToRequest(MatchRequest request, String action) async {
+    setState(() => _processingRequestIds.add(request.id));
+    try {
+      final success = await ref
+          .read(matchProvider.notifier)
+          .respondToRequest(request.id, action);
+      if (!success) return;
+
+      await ref.read(pingProvider.notifier).getPingDetails(widget.pingId);
+      await ref.read(matchProvider.notifier).fetchPendingRequests(widget.pingId);
+      if (!mounted) return;
+
+      final isAccepted = action == 'accept';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Request ${isAccepted ? 'accepted' : 'declined'}'),
+          backgroundColor: isAccepted ? AppTheme.successColor : null,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _processingRequestIds.remove(request.id));
+      }
+    }
+  }
+
+  Future<void> _requestToJoin() async {
+    final success =
+        await ref.read(matchProvider.notifier).requestMatch(widget.pingId);
+    if (!success || !mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Match request sent!'),
+        backgroundColor: AppTheme.successColor,
+      ),
+    );
+    context.pop();
+  }
+
+  Future<void> _cancelRide() async {
+    await ref.read(pingProvider.notifier).cancelPing(widget.pingId);
+    if (mounted) context.pop();
+  }
+
+  void _loadHostRequestsIfNeeded(bool isHost) {
+    if (!isHost || _hasLoadedRequests) return;
+    _hasLoadedRequests = true;
+    Future.microtask(() {
+      ref.read(matchProvider.notifier).fetchPendingRequests(widget.pingId);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final pingState = ref.watch(pingProvider);
     final matchState = ref.watch(matchProvider);
     final authState = ref.watch(authProvider);
-    final theme = Theme.of(context);
-    final currencyFormat = NumberFormat.currency(symbol: '৳', decimalDigits: 0);
     final ping = pingState.selectedPing;
 
     if (pingState.isLoading && ping == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Ride Details')),
-        body: const Center(child: CircularProgressIndicator()),
+      return const _RideDetailsScaffold(
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (ping == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Ride Details')),
-        body: const Center(child: Text('Ride not found')),
-      );
+      return const _RideDetailsScaffold(child: Center(child: Text('Ride not found')));
     }
 
     final isHost = ping.hostId == authState.user?.id;
     final isExpired = ping.expiresAt.isBefore(DateTime.now());
     final hasRequested = matchState.requestedRideIds.contains(ping.id);
-
-    if (isHost && !_hasLoadedRequests) {
-      _hasLoadedRequests = true;
-      Future.microtask(() {
-        ref.read(matchProvider.notifier).fetchPendingRequests(widget.pingId);
-      });
-    }
+    _loadHostRequestsIfNeeded(isHost);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ride Details')),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          // Status & expiry
-          Row(
-            children: [
-              _StatusBadge(status: ping.status),
-              const SizedBox(width: 12),
-              if (!isExpired)
-                Row(
-                  children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 14,
-                      color: AppTheme.lightTextColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Expires ${DateFormat('h:mm a').format(ping.expiresAt)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.lightTextColor,
-                      ),
-                    ),
-                  ],
-                )
-              else
-                const Text(
-                  'Expired',
-                  style: TextStyle(color: AppTheme.errorColor),
-                ),
-            ],
+          RideStatusHeader(
+            status: ping.status,
+            expiresAt: ping.expiresAt,
+            isExpired: isExpired,
           ),
           const SizedBox(height: 24),
-
-          // Route
-          Row(
-            children: [
-              Column(
-                children: [
-                  Container(
-                    width: 16,
-                    height: 16,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  Container(
-                    width: 3,
-                    height: 60,
-                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                  ),
-                  Container(
-                    width: 16,
-                    height: 16,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.secondaryColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'FROM',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppTheme.lightTextColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      ping.pickupLabel,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'TO',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppTheme.lightTextColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      ping.destinationLabel,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          RideRouteSummary(
+            pickupLabel: ping.pickupLabel,
+            destinationLabel: ping.destinationLabel,
           ),
           const SizedBox(height: 24),
-
-          // Meetup point
           if (ping.meetupPoint != null) ...[
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.flag, color: AppTheme.primaryColor),
-                title: const Text('Meetup Point'),
-                subtitle: Text(ping.meetupPoint!),
-              ),
-            ),
+            MeetupPointCard(meetupPoint: ping.meetupPoint!),
             const SizedBox(height: 16),
           ],
-
-          // Fare & details
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Estimated Fare'),
-                      Text(
-                        currencyFormat.format(ping.estimatedFare),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Gender Preference'),
-                      Text(
-                        ping.genderPreference == 'any'
-                            ? 'Any'
-                            : ping.genderPreference == 'male'
-                            ? 'Male'
-                            : 'Female',
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Passengers'),
-                      Text('${ping.currentPassengers}/${ping.maxPassengers}'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+          RideFactsCard(ping: ping),
           const SizedBox(height: 16),
-
-          // Host info
-          if (ping.host != null)
-            Card(
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                  child: Text(
-                    ping.host!.name.isNotEmpty
-                        ? ping.host!.name[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(color: AppTheme.primaryColor),
-                  ),
-                ),
-                title: Text(ping.host!.name),
-                subtitle: Text('${ping.host!.ratingAvg} ⭐'),
-              ),
-            ),
-
+          if (ping.host != null) HostInfoCard(host: ping.host!),
           if (matchState.error != null) ...[
             const SizedBox(height: 16),
             Text(
@@ -250,293 +135,91 @@ class _RideDetailsScreenState extends ConsumerState<RideDetailsScreen> {
               style: const TextStyle(color: AppTheme.errorColor),
             ),
           ],
-
           if (isHost) ...[
             const SizedBox(height: 24),
-            Text(
-              'Join Requests',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            JoinRequestsSection(
+              requests: matchState.pendingRequests,
+              processingRequestIds: _processingRequestIds,
+              onRespond: _respondToRequest,
             ),
-            const SizedBox(height: 12),
-            if (matchState.pendingRequests.isEmpty)
-              Text(
-                'No pending requests yet',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.lightTextColor,
-                ),
-              )
-            else
-              ...matchState.pendingRequests.map((request) {
-                final guest = request.guest;
-                final displayName = guest?.name ?? 'Guest';
-                final genderLabel = guest?.gender ?? '—';
-                final rating = guest?.ratingAvg ?? 0.0;
-                final isProcessing =
-                    _processingRequestIds.contains(request.id);
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor:
-                                  AppTheme.primaryColor.withValues(alpha: 0.1),
-                              child: Text(
-                                displayName.isNotEmpty
-                                    ? displayName[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  color: AppTheme.primaryColor,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    displayName,
-                                    style:
-                                        theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Gender: $genderLabel • Rating: ${rating.toStringAsFixed(1)}',
-                                    style:
-                                        theme.textTheme.bodySmall?.copyWith(
-                                      color: AppTheme.lightTextColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: isProcessing
-                                    ? null
-                                    : () async {
-                                        setState(() {
-                                          _processingRequestIds.add(
-                                            request.id,
-                                          );
-                                        });
-                                        try {
-                                          final success = await ref
-                                              .read(matchProvider.notifier)
-                                              .respondToRequest(
-                                                request.id,
-                                                'decline',
-                                              );
-                                          if (success) {
-                                            await ref
-                                                .read(pingProvider.notifier)
-                                                .getPingDetails(
-                                                  widget.pingId,
-                                                );
-                                            await ref
-                                                .read(matchProvider.notifier)
-                                                .fetchPendingRequests(
-                                                  widget.pingId,
-                                                );
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                  content:
-                                                      Text('Request declined'),
-                                                ),
-                                              );
-                                            }
-                                          }
-                                        } finally {
-                                          if (mounted) {
-                                            setState(() {
-                                              _processingRequestIds.remove(
-                                                request.id,
-                                              );
-                                            });
-                                          }
-                                        }
-                                      },
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppTheme.errorColor,
-                                ),
-                                child: isProcessing
-                                    ? const SizedBox(
-                                        height: 16,
-                                        width: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Text('Decline'),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: FilledButton(
-                                onPressed: isProcessing
-                                    ? null
-                                    : () async {
-                                        setState(() {
-                                          _processingRequestIds.add(
-                                            request.id,
-                                          );
-                                        });
-                                        try {
-                                          final success = await ref
-                                              .read(matchProvider.notifier)
-                                              .respondToRequest(
-                                                request.id,
-                                                'accept',
-                                              );
-                                          if (success) {
-                                            await ref
-                                                .read(pingProvider.notifier)
-                                                .getPingDetails(
-                                                  widget.pingId,
-                                                );
-                                            await ref
-                                                .read(matchProvider.notifier)
-                                                .fetchPendingRequests(
-                                                  widget.pingId,
-                                                );
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                  content:
-                                                      Text('Request accepted'),
-                                                  backgroundColor:
-                                                      AppTheme.successColor,
-                                                ),
-                                              );
-                                            }
-                                          }
-                                        } finally {
-                                          if (mounted) {
-                                            setState(() {
-                                              _processingRequestIds.remove(
-                                                request.id,
-                                              );
-                                            });
-                                          }
-                                        }
-                                      },
-                                child: isProcessing
-                                    ? const SizedBox(
-                                        height: 16,
-                                        width: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text('Accept'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
           ],
-
           const SizedBox(height: 24),
-
-          // Action buttons
-          if (!isHost && ping.status == 'open' && !isExpired)
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: matchState.isLoading || hasRequested
-                    ? null
-                    : () async {
-                        final success = await ref
-                            .read(matchProvider.notifier)
-                            .requestMatch(widget.pingId);
-                        if (success && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Match request sent!'),
-                              backgroundColor: AppTheme.successColor,
-                            ),
-                          );
-                          context.pop();
-                        }
-                      },
-                icon: matchState.isLoading
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(hasRequested ? Icons.check_circle : Icons.handshake),
-                label: Text(
-                  hasRequested ? 'Request Sent' : 'Request to Join',
-                ),
-              ),
-            ),
-
-          if (isHost && ping.status == 'open')
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () async {
-                  await ref
-                      .read(pingProvider.notifier)
-                      .cancelPing(widget.pingId);
-                  if (mounted) context.pop();
-                },
-                icon: const Icon(Icons.cancel_outlined),
-                label: const Text('Cancel Ride'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.errorColor,
-                ),
-              ),
-            ),
+          _RideActionButton(
+            isHost: isHost,
+            isExpired: isExpired,
+            hasRequested: hasRequested,
+            pingStatus: ping.status,
+            isLoading: matchState.isLoading,
+            onRequestToJoin: _requestToJoin,
+            onCancelRide: _cancelRide,
+          ),
         ],
       ),
     );
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  final String status;
-  const _StatusBadge({required this.status});
+class _RideDetailsScaffold extends StatelessWidget {
+  const _RideDetailsScaffold({required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.statusOpen.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: const TextStyle(
-          color: AppTheme.statusOpen,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
+    return Scaffold(appBar: AppBar(title: const Text('Ride Details')), body: child);
+  }
+}
+
+class _RideActionButton extends StatelessWidget {
+  const _RideActionButton({
+    required this.isHost,
+    required this.isExpired,
+    required this.hasRequested,
+    required this.pingStatus,
+    required this.isLoading,
+    required this.onRequestToJoin,
+    required this.onCancelRide,
+  });
+
+  final bool isHost;
+  final bool isExpired;
+  final bool hasRequested;
+  final String pingStatus;
+  final bool isLoading;
+  final VoidCallback onRequestToJoin;
+  final VoidCallback onCancelRide;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isHost && pingStatus == 'open' && !isExpired) {
+      return SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: isLoading || hasRequested ? null : onRequestToJoin,
+          icon: isLoading
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(hasRequested ? Icons.check_circle : Icons.handshake),
+          label: Text(hasRequested ? 'Request Sent' : 'Request to Join'),
         ),
-      ),
-    );
+      );
+    }
+
+    if (isHost && pingStatus == 'open') {
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: onCancelRide,
+          icon: const Icon(Icons.cancel_outlined),
+          label: const Text('Cancel Ride'),
+          style: OutlinedButton.styleFrom(foregroundColor: AppTheme.errorColor),
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }

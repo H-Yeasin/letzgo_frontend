@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
+import 'api_provider.dart';
 
 // Auth state
 class AuthState {
@@ -44,10 +45,11 @@ class AuthState {
   }
 }
 
-class AuthNotifier extends StateNotifier<AuthState> {
-  final ApiService _api = ApiService();
+class AuthNotifier extends Notifier<AuthState> {
+  late final ApiService _api = ref.read(apiServiceProvider);
 
-  AuthNotifier() : super(const AuthState());
+  @override
+  AuthState build() => const AuthState();
 
   Future<void> checkAuthStatus() async {
     final prefs = await SharedPreferences.getInstance();
@@ -201,6 +203,4 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
-});
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);

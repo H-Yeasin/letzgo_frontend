@@ -36,11 +36,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _destinationFilterController = TextEditingController();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(locationProvider.notifier).refreshLocation();
-        _loadNearbyRides();
-        _loadMyRides();
-      });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(locationProvider.notifier).refreshLocation();
+      _loadNearbyRides();
+      _loadMyRides();
+    });
   }
 
   @override
@@ -53,7 +53,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final locationState = ref.read(locationProvider);
     final resolvedLat = lat ?? locationState.latitude ?? _fallbackLat;
     final resolvedLng = lng ?? locationState.longitude ?? _fallbackLng;
-    ref.read(pingProvider.notifier).fetchNearbyPings(
+    ref
+        .read(pingProvider.notifier)
+        .fetchNearbyPings(
           lat: resolvedLat,
           lng: resolvedLng,
           radius: _selectedRadiusMeters,
@@ -85,10 +87,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Text(
                 'Nearby filters',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               Text(
@@ -99,8 +100,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 min: _minRadiusMeters,
                 max: _maxRadiusMeters,
                 value: tempRadius,
-                divisions:
-                    ((_maxRadiusMeters - _minRadiusMeters) / 500).round(),
+                divisions: ((_maxRadiusMeters - _minRadiusMeters) / 500)
+                    .round(),
                 label: '${(tempRadius / 1000).toStringAsFixed(1)} km',
                 onChanged: (value) => setModalState(() {
                   tempRadius = value;
@@ -116,8 +117,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 value: tempGender,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
                 onChanged: (value) => setModalState(() {
                   tempGender = value ?? 'any';
@@ -168,11 +171,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildLocationCard(UserLocationState locationState) {
-    final displayName = locationState.displayName ??
+    final displayName =
+        locationState.displayName ??
         (locationState.latitude != null && locationState.longitude != null
             ? '${locationState.latitude!.toStringAsFixed(4)}, ${locationState.longitude!.toStringAsFixed(4)}'
             : 'Dhaka, Bangladesh');
-    final statusMessage = locationState.error ??
+    final statusMessage =
+        locationState.error ??
         (locationState.permissionGranted
             ? 'Live updates are active'
             : 'Enable location to refine nearby rides');
@@ -214,8 +219,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Text(
                   'Your Location',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.lightTextColor,
-                      ),
+                    color: AppTheme.lightTextColor,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 if (locationState.isLoading)
@@ -235,16 +240,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Text(
                     displayName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.darkTextColor,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.darkTextColor,
+                    ),
                   ),
                 const SizedBox(height: 4),
                 Text(
                   statusMessage,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.lightTextColor,
-                      ),
+                    color: AppTheme.lightTextColor,
+                  ),
                 ),
               ],
             ),
@@ -254,17 +259,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             duration: const Duration(milliseconds: 600),
             child: IconButton(
               iconSize: 28,
-              onPressed: locationState.isLoading ? null : _triggerLocationRefresh,
+              onPressed: locationState.isLoading
+                  ? null
+                  : _triggerLocationRefresh,
               icon: locationState.isLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(
-                      Icons.my_location,
-                      color: AppTheme.primaryColor,
-                    ),
+                  : const Icon(Icons.my_location, color: AppTheme.primaryColor),
             ),
           ),
         ],
@@ -286,20 +290,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final now = DateTime.now();
     const activeStatuses = {'open', 'matched'};
     final activeMyRides = pingState.myPings
-        .where((ping) =>
-            activeStatuses.contains(ping.status) &&
-            ping.expiresAt.isAfter(now))
+        .where(
+          (ping) =>
+              activeStatuses.contains(ping.status) &&
+              ping.expiresAt.isAfter(now),
+        )
         .toList();
     final nearbyActive = pingState.nearbyPings
-        .where((ping) =>
-            activeStatuses.contains(ping.status) &&
-            ping.expiresAt.isAfter(now))
+        .where(
+          (ping) =>
+              activeStatuses.contains(ping.status) &&
+              ping.expiresAt.isAfter(now),
+        )
         .toList();
     final filteredNearby = _destinationFilter.isEmpty
         ? nearbyActive
         : nearbyActive.where((ping) {
             final destination = ping.destinationLabel.toLowerCase();
-            final pickup = (ping.pickupLabel ?? '').toLowerCase();
+            final pickup = (ping.pickupLabel).toLowerCase();
             final query = _destinationFilter.toLowerCase();
             return destination.contains(query) || pickup.contains(query);
           }).toList();

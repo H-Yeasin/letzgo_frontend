@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:letzgo_app/providers/ping_provider.dart';
+import 'package:letzgo_app/providers/api_provider.dart';
 
 const _copyWithErrorSentinel = Object();
 
@@ -45,10 +45,9 @@ class UserLocationState {
   }
 }
 
-class LocationNotifier extends StateNotifier<UserLocationState> {
-  final Ref _ref;
-
-  LocationNotifier(this._ref) : super(const UserLocationState());
+class LocationNotifier extends Notifier<UserLocationState> {
+  @override
+  UserLocationState build() => const UserLocationState();
 
   Future<void> refreshLocation() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -109,7 +108,7 @@ class LocationNotifier extends StateNotifier<UserLocationState> {
 
   Future<String> _resolveAddress(double lat, double lng) async {
     try {
-      final api = _ref.read(apiServiceProvider);
+      final api = ref.read(apiServiceProvider);
       final displayName = await api.reverseGeocode(lat: lat, lng: lng);
       final shortened = _shortenAddress(displayName);
       if (shortened.isNotEmpty) {
@@ -171,6 +170,4 @@ class LocationNotifier extends StateNotifier<UserLocationState> {
 }
 
 final locationProvider =
-    StateNotifierProvider<LocationNotifier, UserLocationState>(
-      (ref) => LocationNotifier(ref),
-    );
+    NotifierProvider<LocationNotifier, UserLocationState>(LocationNotifier.new);

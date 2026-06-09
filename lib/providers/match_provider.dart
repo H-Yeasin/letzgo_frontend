@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ride_ping.dart';
 import '../services/api_service.dart';
-import 'ping_provider.dart';
+import 'api_provider.dart';
 
 class MatchState {
   final bool isLoading;
@@ -40,10 +40,11 @@ class MatchState {
   }
 }
 
-class MatchNotifier extends StateNotifier<MatchState> {
-  final ApiService _api;
+class MatchNotifier extends Notifier<MatchState> {
+  late final ApiService _api = ref.read(apiServiceProvider);
 
-  MatchNotifier(this._api) : super(const MatchState());
+  @override
+  MatchState build() => const MatchState();
 
   Future<void> fetchMyMatches() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -151,6 +152,5 @@ class MatchNotifier extends StateNotifier<MatchState> {
   }
 }
 
-final matchProvider = StateNotifierProvider<MatchNotifier, MatchState>((ref) {
-  return MatchNotifier(ref.read(apiServiceProvider));
-});
+final matchProvider =
+    NotifierProvider<MatchNotifier, MatchState>(MatchNotifier.new);

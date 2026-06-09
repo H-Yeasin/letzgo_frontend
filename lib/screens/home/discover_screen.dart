@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../constants/theme.dart';
+import '../../providers/api_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/ping_provider.dart';
 import '../../widgets/ride_ping_card.dart';

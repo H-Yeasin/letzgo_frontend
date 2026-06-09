@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/ride_ping.dart';
-import '../services/api_service.dart';
-import 'ping_provider.dart';
+import 'package:letzgo_app/models/ride_ping.dart';
+import 'package:letzgo_app/providers/api_provider.dart';
+import 'package:letzgo_app/services/api_service.dart';
 
 class ChatState {
   final bool isLoading;

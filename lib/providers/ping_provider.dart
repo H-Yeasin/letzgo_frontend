@@ -1,8 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ride_ping.dart';
 import '../services/api_service.dart';
-
-final apiServiceProvider = Provider<ApiService>((ref) => ApiService());
+import 'api_provider.dart';
 
 class PingState {
   final bool isLoading;
@@ -44,10 +43,11 @@ class PingState {
   }
 }
 
-class PingNotifier extends StateNotifier<PingState> {
-  final ApiService _api;
+class PingNotifier extends Notifier<PingState> {
+  late final ApiService _api = ref.read(apiServiceProvider);
 
-  PingNotifier(this._api) : super(const PingState());
+  @override
+  PingState build() => const PingState();
 
   Future<void> fetchNearbyPings({
     required double lat,
@@ -173,6 +173,4 @@ class PingNotifier extends StateNotifier<PingState> {
   }
 }
 
-final pingProvider = StateNotifierProvider<PingNotifier, PingState>((ref) {
-  return PingNotifier(ref.read(apiServiceProvider));
-});
+final pingProvider = NotifierProvider<PingNotifier, PingState>(PingNotifier.new);
