@@ -131,7 +131,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
                         filled: true,
-                        fillColor: AppTheme.backgroundColor,
+                        fillColor: theme.scaffoldBackgroundColor,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
@@ -172,6 +172,7 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -181,7 +182,7 @@ class _MessageBubble extends StatelessWidget {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         decoration: BoxDecoration(
-          color: isMe ? AppTheme.primaryColor : Colors.white,
+          color: isMe ? AppTheme.primaryColor : theme.colorScheme.surface,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -203,7 +204,7 @@ class _MessageBubble extends StatelessWidget {
         child: Text(
           message.content,
           style: TextStyle(
-            color: isMe ? Colors.white : AppTheme.darkTextColor,
+            color: isMe ? Colors.white : theme.colorScheme.onSurface,
             fontSize: 15,
           ),
         ),

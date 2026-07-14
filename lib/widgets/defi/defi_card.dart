@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
 
 enum DefiCardVariant { normal, glass, hover }
 
@@ -19,27 +19,28 @@ class DefiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final defi = context.defi;
     final borderRadius = BorderRadius.circular(16);
 
     BoxDecoration decoration;
     switch (variant) {
       case DefiCardVariant.normal:
         decoration = BoxDecoration(
-          color: AppColors.surface,
+          color: defi.surface,
           borderRadius: borderRadius,
-          border: Border.all(color: AppColors.borderLight),
+          border: Border.all(color: defi.borderLight),
         );
       case DefiCardVariant.glass:
         decoration = BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.4),
+          color: defi.glassFill,
           borderRadius: borderRadius,
-          border: Border.all(color: AppColors.borderLight),
+          border: Border.all(color: defi.borderLight),
         );
       case DefiCardVariant.hover:
         decoration = BoxDecoration(
-          color: AppColors.surface,
+          color: defi.surface,
           borderRadius: borderRadius,
-          border: Border.all(color: AppColors.borderLight),
+          border: Border.all(color: defi.borderLight),
         );
     }
 

@@ -39,13 +39,13 @@ class RidePingCard extends StatelessWidget {
                   Icon(
                     Icons.access_time,
                     size: 14,
-                    color: AppTheme.lightTextColor,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     timeFormat.format(ping.createdAt),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.lightTextColor,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -97,7 +97,7 @@ class RidePingCard extends StatelessWidget {
                         Text(
                           ping.destinationLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.lightTextColor,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -141,13 +141,13 @@ class RidePingCard extends StatelessWidget {
                   Icon(
                     Icons.people_outline,
                     size: 16,
-                    color: AppTheme.lightTextColor,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${ping.availableSeats}/${ping.maxPassengers}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.lightTextColor,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -175,6 +175,7 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     Color bgColor;
     Color textColor;
     String label;
@@ -201,8 +202,8 @@ class _StatusBadge extends StatelessWidget {
         label = 'Cancelled';
         break;
       default:
-        bgColor = AppTheme.lightTextColor.withValues(alpha: 0.1);
-        textColor = AppTheme.lightTextColor;
+        bgColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.1);
+        textColor = theme.colorScheme.onSurfaceVariant;
         label = status;
     }
 

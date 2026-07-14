@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
 
 class DefiGridBackground extends StatelessWidget {
   final Widget child;
@@ -12,7 +12,7 @@ class DefiGridBackground extends StatelessWidget {
       children: [
         Positioned.fill(
           child: CustomPaint(
-            painter: _GridPainter(),
+            painter: _GridPainter(context.defi.gridLine),
           ),
         ),
         child,
@@ -22,10 +22,14 @@ class DefiGridBackground extends StatelessWidget {
 }
 
 class _GridPainter extends CustomPainter {
+  final Color lineColor;
+
+  _GridPainter(this.lineColor);
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.border.withValues(alpha: 0.08)
+      ..color = lineColor
       ..strokeWidth = 0.5;
 
     const double spacing = 40;
@@ -38,5 +42,6 @@ class _GridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _GridPainter oldDelegate) =>
+      oldDelegate.lineColor != lineColor;
 }

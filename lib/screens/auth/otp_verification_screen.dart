@@ -76,7 +76,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                 'Enter verification code',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkTextColor,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
@@ -84,7 +84,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                 'We sent a code to ${widget.phone}',
                 style: Theme.of(
                   context,
-                ).textTheme.bodyLarge?.copyWith(color: AppTheme.lightTextColor),
+                ).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 12),
               // Show debug OTP in development
@@ -137,11 +139,11 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         decoration: InputDecoration(
                           counterText: '',
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: Theme.of(context).colorScheme.surface,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFE0E0E0),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.outline,
                             ),
                           ),
                         ),

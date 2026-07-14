@@ -73,14 +73,14 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   'Tell us about yourself',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.darkTextColor,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'This helps other riders know who they\'re riding with.',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.lightTextColor,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -195,12 +195,12 @@ class _GenderChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? AppTheme.primaryColor.withValues(alpha: 0.1)
-                : Colors.white,
+                : Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
                   ? AppTheme.primaryColor
-                  : const Color(0xFFE0E0E0),
+                  : Theme.of(context).colorScheme.outline,
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -210,7 +210,7 @@ class _GenderChip extends StatelessWidget {
                 icon,
                 color: isSelected
                     ? AppTheme.primaryColor
-                    : AppTheme.lightTextColor,
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 size: 28,
               ),
               const SizedBox(height: 4),
@@ -219,7 +219,7 @@ class _GenderChip extends StatelessWidget {
                 style: TextStyle(
                   color: isSelected
                       ? AppTheme.primaryColor
-                      : AppTheme.lightTextColor,
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   fontSize: 14,
                 ),

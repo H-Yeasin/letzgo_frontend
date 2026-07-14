@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
 
 class DefiCornerAccent extends StatelessWidget {
   final Alignment alignment;
@@ -15,6 +16,7 @@ class DefiCornerAccent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gradient = context.defi.gradientPrimary;
     return Align(
       alignment: alignment,
       child: Stack(
@@ -29,7 +31,7 @@ class DefiCornerAccent extends StatelessWidget {
               width: length,
               height: 2,
               decoration: BoxDecoration(
-                gradient: AppColors.gradientPrimary,
+                gradient: gradient,
               ),
             ),
           ),
@@ -43,7 +45,7 @@ class DefiCornerAccent extends StatelessWidget {
               width: 2,
               height: length,
               decoration: BoxDecoration(
-                gradient: AppColors.gradientPrimary,
+                gradient: gradient,
               ),
             ),
           ),

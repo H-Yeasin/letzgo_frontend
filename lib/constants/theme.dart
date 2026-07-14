@@ -12,17 +12,17 @@ export 'app_colors.dart';
 export 'defi_theme_extension.dart';
 
 /// Backward-compatible accessor for code still referencing `AppTheme.*`
+/// Only theme-invariant brand/semantic colors live here; surface and text
+/// colors must come from the active theme (`Theme.of(context)` or
+/// `context.defi`) so both dark and light modes render correctly.
 class AppTheme {
-  static ThemeData get lightTheme => defiDarkTheme;
+  static ThemeData get lightTheme => defiLightTheme;
+  static ThemeData get darkTheme => defiDarkTheme;
   static const Color primaryColor = AppColors.primary;
   static const Color secondaryColor = AppColors.secondary;
   static const Color errorColor = AppColors.danger;
   static const Color successColor = AppColors.success;
   static const Color warningColor = AppColors.warning;
-  static const Color backgroundColor = AppColors.bg;
-  static const Color surfaceColor = AppColors.surface;
-  static const Color darkTextColor = AppColors.fg;
-  static const Color lightTextColor = AppColors.fgMuted;
   static const Color femaleColor = Color(0xFFFF6B9D);
   static const Color maleColor = Color(0xFF4A90D9);
   static const Color statusOpen = Color(0xFF22C55E);

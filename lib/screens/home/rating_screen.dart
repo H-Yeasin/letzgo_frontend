@@ -66,7 +66,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
               Text(
                 'Rate your experience with your co-rider',
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.lightTextColor,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -82,7 +82,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                       size: 48,
                       color: index < _rating
                           ? AppTheme.warningColor
-                          : AppTheme.lightTextColor,
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
                     onPressed: () => setState(() => _rating = index + 1),
                   );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../constants/theme.dart';
 import '../../models/ride_ping.dart';
 import '../../providers/ping_provider.dart';
 import '../../widgets/ride_ping_card.dart';
@@ -106,7 +105,7 @@ class _MyRidesScreenState extends ConsumerState<MyRidesScreen>
             Text(
               emptyText,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: AppTheme.lightTextColor,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],

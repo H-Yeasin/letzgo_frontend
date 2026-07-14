@@ -62,7 +62,7 @@ class ProfileScreen extends ConsumerWidget {
                 Text(
                   user?.phone ?? '',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.lightTextColor,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -265,7 +265,10 @@ class _StatBadge extends StatelessWidget {
         ),
         Text(
           label,
-          style: const TextStyle(color: AppTheme.lightTextColor, fontSize: 12),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
         ),
       ],
     );

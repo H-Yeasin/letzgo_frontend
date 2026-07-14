@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letzgo_app/constants/theme.dart';
+import 'package:letzgo_app/providers/theme_provider.dart';
 
-class HomeHeader extends StatelessWidget {
+class HomeHeader extends ConsumerWidget {
   final String displayName;
   final String initial;
   final double rating;
@@ -18,8 +20,9 @@ class HomeHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,12 +55,25 @@ class HomeHeader extends StatelessWidget {
                   Text(
                     'Where are you heading?',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.lightTextColor,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
             ),
+            IconButton(
+              onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+              tooltip: isDark ? 'Switch to light theme' : 'Switch to dark theme',
+              icon: Icon(
+                isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                size: 22,
+                color: AppTheme.primaryColor,
+              ),
+              style: IconButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+              ),
+            ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(

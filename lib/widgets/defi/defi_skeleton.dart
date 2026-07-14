@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
 
 class DefiSkeleton extends StatelessWidget {
   final double width;
@@ -15,15 +15,25 @@ class DefiSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final defi = context.defi;
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: defi.shimmerBase,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
-      child: const Shimmer(
-        linearGradient: _shimmerGradient,
+      child: Shimmer(
+        linearGradient: LinearGradient(
+          colors: [
+            Colors.transparent,
+            defi.shimmerHighlight,
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.5, 1.0],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
     );
   }
@@ -78,21 +88,10 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
           },
           blendMode: BlendMode.srcOver,
           child: Container(
-            color: AppColors.surfaceHover.withValues(alpha: 0.3),
+            color: context.defi.surfaceHover.withValues(alpha: 0.3),
           ),
         );
       },
     );
   }
 }
-
-const LinearGradient _shimmerGradient = LinearGradient(
-  colors: [
-    Color(0x00000000),
-    Color(0x33FFFFFF),
-    Color(0x00000000),
-  ],
-  stops: [0.0, 0.5, 1.0],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);

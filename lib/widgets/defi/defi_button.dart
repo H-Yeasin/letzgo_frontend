@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
 
 enum DefiButtonVariant { primary, secondary, ghost, danger, outline }
 
@@ -23,6 +23,7 @@ class DefiButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final defi = context.defi;
     final isDisabled = onPressed == null || loading;
 
     BoxDecoration decoration;
@@ -32,11 +33,11 @@ class DefiButton extends StatelessWidget {
     switch (variant) {
       case DefiButtonVariant.primary:
         decoration = BoxDecoration(
-          gradient: AppColors.gradientPrimary,
+          gradient: defi.gradientPrimary,
           borderRadius: BorderRadius.circular(9999),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryGlow,
+              color: defi.primaryGlow,
               blurRadius: 20,
               spreadRadius: -2,
             ),
@@ -46,22 +47,22 @@ class DefiButton extends StatelessWidget {
         padding = const EdgeInsets.symmetric(horizontal: 28, vertical: 14);
       case DefiButtonVariant.secondary:
         decoration = BoxDecoration(
-          color: AppColors.surfaceElevated,
+          color: defi.surfaceElevated,
           borderRadius: BorderRadius.circular(9999),
-          border: Border.all(color: AppColors.borderLight),
+          border: Border.all(color: defi.borderLight),
         );
-        textColor = AppColors.fg;
+        textColor = defi.fg;
         padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
       case DefiButtonVariant.ghost:
         decoration = BoxDecoration(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(9999),
         );
-        textColor = AppColors.fgMuted;
+        textColor = defi.fgMuted;
         padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 10);
       case DefiButtonVariant.danger:
         decoration = BoxDecoration(
-          color: AppColors.danger,
+          color: defi.danger,
           borderRadius: BorderRadius.circular(9999),
         );
         textColor = Colors.white;
@@ -70,9 +71,9 @@ class DefiButton extends StatelessWidget {
         decoration = BoxDecoration(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(9999),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: defi.border),
         );
-        textColor = AppColors.fg;
+        textColor = defi.fg;
         padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
     }
 

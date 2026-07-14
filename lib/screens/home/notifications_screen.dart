@@ -58,7 +58,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     Text(
                       'No notifications yet',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.lightTextColor,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -73,12 +73,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: notif.isRead
-                          ? AppTheme.lightTextColor.withValues(alpha: 0.1)
+                          ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.1)
                           : AppTheme.primaryColor.withValues(alpha: 0.1),
                       child: Icon(
                         _getNotificationIcon(notif.type),
                         color: notif.isRead
-                            ? AppTheme.lightTextColor
+                            ? theme.colorScheme.onSurfaceVariant
                             : AppTheme.primaryColor,
                         size: 20,
                       ),
@@ -95,7 +95,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     trailing: Text(
                       DateFormat('MMM d').format(notif.createdAt),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.lightTextColor,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     onTap: () {

@@ -277,7 +277,7 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
               Text(
                 'Fill in the details about your ride',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.lightTextColor,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 24),

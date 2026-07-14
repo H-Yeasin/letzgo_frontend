@@ -130,7 +130,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 child: Text(
                   'Gender',
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: AppTheme.lightTextColor,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),

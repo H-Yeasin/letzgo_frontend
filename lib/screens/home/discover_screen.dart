@@ -323,7 +323,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 border: InputBorder.none,
                 isDense: false,
                 hintStyle: TextStyle(
-                  color: AppTheme.lightTextColor.withValues(alpha: 0.6),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
               ),
               onSubmitted: _geocodeAndSearch,

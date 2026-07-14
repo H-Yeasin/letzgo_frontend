@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/theme.dart';
-import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -9,18 +9,42 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final user = ref.watch(authProvider).user;
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Appearance section
+          Text(
+            'Appearance',
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: SwitchListTile(
+              secondary: Icon(
+                isDark ? Icons.dark_mode : Icons.light_mode,
+                color: AppTheme.primaryColor,
+              ),
+              title: const Text('Dark Mode'),
+              subtitle: Text(isDark ? 'True Void' : 'Daylight Gold'),
+              value: isDark,
+              onChanged: (_) =>
+                  ref.read(themeModeProvider.notifier).toggle(),
+            ),
+          ),
+          const SizedBox(height: 24),
+
           // Account section
           Text(
             'Account',
             style: theme.textTheme.titleSmall?.copyWith(
-              color: AppTheme.lightTextColor,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -49,7 +73,7 @@ class SettingsScreen extends ConsumerWidget {
           Text(
             'Preferences',
             style: theme.textTheme.titleSmall?.copyWith(
-              color: AppTheme.lightTextColor,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -81,7 +105,7 @@ class SettingsScreen extends ConsumerWidget {
           Text(
             'About',
             style: theme.textTheme.titleSmall?.copyWith(
-              color: AppTheme.lightTextColor,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),

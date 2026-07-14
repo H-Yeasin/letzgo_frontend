@@ -64,14 +64,14 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                   'Welcome to\nLetzGo',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.darkTextColor,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Find nearby co-passengers and split your ride fare.',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.lightTextColor,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 48),
@@ -136,7 +136,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                   child: Text(
                     'By continuing, you agree to our Terms & Privacy Policy',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.lightTextColor,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),

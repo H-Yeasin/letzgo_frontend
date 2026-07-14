@@ -32,16 +32,16 @@ class RideStatusHeader extends StatelessWidget {
         else
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.access_time,
                 size: 14,
-                color: AppTheme.lightTextColor,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 4),
               Text(
                 'Expires ${DateFormat('h:mm a').format(expiresAt)}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.lightTextColor,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -209,7 +209,7 @@ class JoinRequestsSection extends StatelessWidget {
           Text(
             'No pending requests yet',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppTheme.lightTextColor,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           )
         else
@@ -299,7 +299,7 @@ class _JoinRequestCard extends StatelessWidget {
                       Text(
                         'Gender: $genderLabel | Rating: ${rating.toStringAsFixed(1)}',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.lightTextColor,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -434,7 +434,7 @@ class _RouteLabel extends StatelessWidget {
         Text(
           label,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: AppTheme.lightTextColor,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 4),

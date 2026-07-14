@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../constants/theme.dart';
 import '../../providers/match_provider.dart';
 import '../../widgets/ride_ping_card.dart';
 
@@ -49,7 +48,7 @@ class _RideHistoryScreenState extends ConsumerState<RideHistoryScreen> {
                     Text(
                       'No ride history yet',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.lightTextColor,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

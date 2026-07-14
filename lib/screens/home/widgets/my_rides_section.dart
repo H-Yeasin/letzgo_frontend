@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:letzgo_app/constants/theme.dart';
 import 'package:letzgo_app/models/ride_ping.dart';
 import 'package:letzgo_app/widgets/ride_ping_card.dart';
 
@@ -49,14 +48,14 @@ class MyRidesSection extends StatelessWidget {
                   Text(
                     'No active rides yet',
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: AppTheme.lightTextColor,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Host a ride to get started!',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.lightTextColor.withValues(alpha: 0.7),
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                     ),
                   ),
                 ],

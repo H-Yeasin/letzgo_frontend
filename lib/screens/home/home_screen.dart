@@ -219,19 +219,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Text(
                   'Your Location',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.lightTextColor,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 4),
                 if (locationState.isLoading)
                   Shimmer.fromColors(
-                    baseColor: AppTheme.lightTextColor.withValues(alpha: 0.6),
+                    baseColor: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                     highlightColor: Colors.white,
                     child: Container(
                       width: double.infinity,
                       height: 18,
                       decoration: BoxDecoration(
-                        color: AppTheme.lightTextColor.withValues(alpha: 0.4),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
@@ -241,14 +241,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     displayName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.darkTextColor,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 const SizedBox(height: 4),
                 Text(
                   statusMessage,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.lightTextColor,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
 
 class DefiInput extends StatelessWidget {
   final TextEditingController? controller;
@@ -31,8 +31,8 @@ class DefiInput extends StatelessWidget {
       keyboardType: keyboardType,
       validator: validator,
       onChanged: onChanged,
-      style: const TextStyle(
-        color: AppColors.fg,
+      style: TextStyle(
+        color: context.defi.fg,
         fontSize: 15,
       ),
       decoration: InputDecoration(

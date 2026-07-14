@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
 import 'defi_card.dart';
 
 class DefiStatTile extends StatelessWidget {
@@ -20,6 +21,7 @@ class DefiStatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final defi = context.defi;
     return DefiCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -36,10 +38,10 @@ class DefiStatTile extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'JetBrainsMono',
               fontSize: 11,
-              color: AppColors.fgMuted,
+              color: defi.fgMuted,
               letterSpacing: 0.5,
               fontWeight: FontWeight.w500,
             ),
@@ -47,19 +49,19 @@ class DefiStatTile extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppColors.fg,
+              color: defi.fg,
             ),
           ),
           if (sub != null) ...[
             const SizedBox(height: 2),
             Text(
               sub!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.fgDim,
+                color: defi.fgDim,
               ),
             ),
           ],

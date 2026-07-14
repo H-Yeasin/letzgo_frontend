@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
 
 enum DefiBadgeVariant { success, warning, danger, info, neutral }
 
@@ -15,42 +15,43 @@ class DefiBadge extends StatelessWidget {
     this.pulse = false,
   });
 
-  Color get _bgColor {
+  Color _bgColor(DefiThemeExtension defi) {
     switch (variant) {
       case DefiBadgeVariant.success:
-        return AppColors.successMuted;
+        return defi.successMuted;
       case DefiBadgeVariant.warning:
-        return AppColors.warningMuted;
+        return defi.warningMuted;
       case DefiBadgeVariant.danger:
-        return AppColors.dangerMuted;
+        return defi.dangerMuted;
       case DefiBadgeVariant.info:
-        return AppColors.infoMuted;
+        return defi.infoMuted;
       case DefiBadgeVariant.neutral:
-        return AppColors.fgDim.withValues(alpha: 0.12);
+        return defi.fgDim.withValues(alpha: 0.12);
     }
   }
 
-  Color get _textColor {
+  Color _textColor(DefiThemeExtension defi) {
     switch (variant) {
       case DefiBadgeVariant.success:
-        return AppColors.success;
+        return defi.success;
       case DefiBadgeVariant.warning:
-        return AppColors.warning;
+        return defi.warning;
       case DefiBadgeVariant.danger:
-        return AppColors.danger;
+        return defi.danger;
       case DefiBadgeVariant.info:
-        return AppColors.info;
+        return defi.info;
       case DefiBadgeVariant.neutral:
-        return AppColors.fgMuted;
+        return defi.fgMuted;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final defi = context.defi;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: _bgColor,
+        color: _bgColor(defi),
         borderRadius: BorderRadius.circular(9999),
       ),
       child: Row(
@@ -62,14 +63,14 @@ class DefiBadge extends StatelessWidget {
               height: 6,
               margin: const EdgeInsets.only(right: 6),
               decoration: BoxDecoration(
-                color: _textColor,
+                color: _textColor(defi),
                 shape: BoxShape.circle,
               ),
             ),
           Text(
             label,
             style: TextStyle(
-              color: _textColor,
+              color: _textColor(defi),
               fontSize: 11,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,

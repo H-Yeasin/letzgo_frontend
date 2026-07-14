@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
 
 class DefiGlassCard extends StatelessWidget {
   final Widget child;
@@ -22,9 +22,9 @@ class DefiGlassCard extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.3),
+            color: context.defi.glassFill,
             borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: AppColors.borderLight),
+            border: Border.all(color: context.defi.borderLight),
           ),
           padding: padding ?? const EdgeInsets.all(20),
           child: child,

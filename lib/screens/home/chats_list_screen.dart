@@ -51,14 +51,14 @@ class _ChatsListScreenState extends ConsumerState<ChatsListScreen> {
                     Text(
                       'No active chats',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.lightTextColor,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Match with a ride to start chatting',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.lightTextColor,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
