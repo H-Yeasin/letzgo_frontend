@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'constants/theme.dart';
+import 'constants/app_theme.dart';
 import 'routes/app_router.dart';
 
 void main() {
@@ -18,7 +18,7 @@ class LetzGoApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'LetzGo',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
+      theme: defiDarkTheme,
       routerConfig: router,
     );
   }
