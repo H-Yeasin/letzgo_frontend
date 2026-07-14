@@ -114,7 +114,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: tempGender,
+                initialValue: tempGender,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(
@@ -189,7 +189,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -201,7 +201,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.15),
+              color: AppTheme.primaryColor.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: const Center(
@@ -225,13 +225,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const SizedBox(height: 4),
                 if (locationState.isLoading)
                   Shimmer.fromColors(
-                    baseColor: AppTheme.lightTextColor.withOpacity(0.6),
+                    baseColor: AppTheme.lightTextColor.withValues(alpha: 0.6),
                     highlightColor: Colors.white,
                     child: Container(
                       width: double.infinity,
                       height: 18,
                       decoration: BoxDecoration(
-                        color: AppTheme.lightTextColor.withOpacity(0.4),
+                        color: AppTheme.lightTextColor.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
