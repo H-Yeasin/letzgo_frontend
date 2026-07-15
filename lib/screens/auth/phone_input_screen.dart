@@ -4,6 +4,27 @@ import 'package:flutter/services.dart';
 import '../../constants/theme.dart';
 import '../../providers/auth_provider.dart';
 
+/// Keeps only the 10-digit local part after +880: strips non-digits,
+/// a pasted 880 country code, and any leading 0.
+class BdPhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    var digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('880') && digits.length > 10) {
+      digits = digits.substring(3);
+    }
+    digits = digits.replaceFirst(RegExp(r'^0+'), '');
+    if (digits.length > 10) digits = digits.substring(0, 10);
+    return TextEditingValue(
+      text: digits,
+      selection: TextSelection.collapsed(offset: digits.length),
+    );
+  }
+}
+
 class PhoneInputScreen extends ConsumerStatefulWidget {
   const PhoneInputScreen({super.key});
 
@@ -12,7 +33,7 @@ class PhoneInputScreen extends ConsumerStatefulWidget {
 }
 
 class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
-  final _phoneController = TextEditingController(text: '+880');
+  final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -24,7 +45,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
   Future<void> _submitPhone() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final phone = _phoneController.text.trim();
+    final phone = '880${_phoneController.text.trim()}';
     // In development phase, directly verify the phone number with the default dev OTP '123456'
     await ref.read(authProvider.notifier).verifyOtp(phone, '123456');
   }
@@ -85,17 +106,15 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(14),
-                  ],
+                  inputFormatters: [BdPhoneInputFormatter()],
                   decoration: const InputDecoration(
-                    hintText: '+8801XXXXXXXXX',
+                    hintText: '1XXXXXXXXX',
                     prefixIcon: Icon(Icons.phone_outlined),
+                    prefixText: '+880 ',
                   ),
                   validator: (value) {
-                    if (value == null || value.length < 10) {
-                      return 'Please enter a valid phone number';
+                    if (value == null || value.length != 10) {
+                      return 'Enter the 10-digit number after +880 (without the leading 0)';
                     }
                     return null;
                   },

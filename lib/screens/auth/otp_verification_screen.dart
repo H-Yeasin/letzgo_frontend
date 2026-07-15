@@ -81,7 +81,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'We sent a code to ${widget.phone}',
+                'We sent a code to +${widget.phone}',
                 style: Theme.of(
                   context,
                 ).textTheme.bodyLarge?.copyWith(
