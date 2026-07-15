@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'defi_theme_extension.dart';
 
@@ -52,7 +51,7 @@ ThemeData _buildDefiTheme({
       outline: defi.border,
     ),
     scaffoldBackgroundColor: defi.bg,
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: 'Inter',
     extensions: <ThemeExtension<dynamic>>[defi],
 
     // AppBar
@@ -61,7 +60,8 @@ ThemeData _buildDefiTheme({
       centerTitle: true,
       backgroundColor: Colors.transparent,
       foregroundColor: defi.fg,
-      titleTextStyle: GoogleFonts.spaceGrotesk(
+      titleTextStyle: TextStyle(
+        fontFamily: 'SpaceGrotesk',
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: defi.fg,
@@ -80,7 +80,8 @@ ThemeData _buildDefiTheme({
         foregroundColor: Colors.white,
         disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
         disabledForegroundColor: Colors.white.withValues(alpha: 0.5),
-        textStyle: GoogleFonts.inter(
+        textStyle: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
@@ -95,7 +96,7 @@ ThemeData _buildDefiTheme({
         ),
         side: BorderSide(color: defi.border),
         foregroundColor: defi.fg,
-        textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+        textStyle: TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500),
       ),
     ),
 

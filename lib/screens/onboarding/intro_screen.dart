@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../constants/app_colors.dart';
 import '../../constants/defi_theme_extension.dart';
@@ -119,7 +118,8 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                         const SizedBox(width: 8),
                         Text(
                           'LetzGo',
-                          style: GoogleFonts.spaceGrotesk(
+                          style: TextStyle(
+                            fontFamily: 'SpaceGrotesk',
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: defi.fg,
@@ -233,7 +233,8 @@ class _IntroPageContent extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   data.titleTop,
-                  style: GoogleFonts.spaceGrotesk(
+                  style: TextStyle(
+                    fontFamily: 'SpaceGrotesk',
                     fontSize: 30,
                     fontWeight: FontWeight.w700,
                     color: defi.fg,
@@ -243,7 +244,8 @@ class _IntroPageContent extends StatelessWidget {
                 ),
                 DefiGlowText(
                   text: data.titleGlow,
-                  style: GoogleFonts.spaceGrotesk(
+                  style: TextStyle(
+                    fontFamily: 'SpaceGrotesk',
                     fontSize: 30,
                     fontWeight: FontWeight.w700,
                     height: 1.15,
@@ -579,7 +581,8 @@ class _FareSplitVisualState extends State<_FareSplitVisual>
               children: [
                 Text(
                   '৳ 300',
-                  style: GoogleFonts.spaceGrotesk(
+                  style: TextStyle(
+                    fontFamily: 'SpaceGrotesk',
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
                     color: defi.fgMuted,
@@ -601,7 +604,8 @@ class _FareSplitVisualState extends State<_FareSplitVisual>
                     final value = t < 0.6 ? 300.0 - ((t / 0.6) * 150.0) : 150.0;
                     return DefiGlowText(
                       text: '৳ ${value.round()}',
-                      style: GoogleFonts.spaceGrotesk(
+                      style: TextStyle(
+                        fontFamily: 'SpaceGrotesk',
                         fontSize: 32,
                         fontWeight: FontWeight.w700,
                       ),

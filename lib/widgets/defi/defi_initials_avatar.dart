@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/app_colors.dart';
 
 /// A code-drawn circular avatar showing the user's initials against a
@@ -94,7 +93,8 @@ class DefiInitialsAvatar extends StatelessWidget {
       child: Center(
         child: Text(
           _initials(name),
-          style: GoogleFonts.spaceGrotesk(
+          style: TextStyle(
+            fontFamily: 'SpaceGrotesk',
             color: Colors.white,
             fontSize: size * 0.36,
             fontWeight: FontWeight.w700,

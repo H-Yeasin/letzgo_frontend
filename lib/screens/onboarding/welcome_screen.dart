@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/defi_theme_extension.dart';
 import '../../providers/auth_provider.dart';
@@ -127,7 +126,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   // Welcome text
                   DefiGlowText(
                     text: 'Welcome aboard,\n$firstName!',
-                    style: GoogleFonts.spaceGrotesk(
+                    style: TextStyle(
+                      fontFamily: 'SpaceGrotesk',
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
                       height: 1.2,

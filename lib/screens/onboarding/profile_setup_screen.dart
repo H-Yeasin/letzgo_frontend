@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/defi_theme_extension.dart';
 import '../../providers/auth_provider.dart';
@@ -256,7 +255,8 @@ class _NameStep extends StatelessWidget {
         children: [
           DefiGlowText(
             text: 'What should riders\ncall you?',
-            style: GoogleFonts.spaceGrotesk(
+            style: TextStyle(
+              fontFamily: 'SpaceGrotesk',
               fontSize: 26,
               fontWeight: FontWeight.w700,
               height: 1.2,
@@ -323,7 +323,8 @@ class _IdentityStep extends StatelessWidget {
         children: [
           DefiGlowText(
             text: 'Make it yours',
-            style: GoogleFonts.spaceGrotesk(
+            style: TextStyle(
+              fontFamily: 'SpaceGrotesk',
               fontSize: 26,
               fontWeight: FontWeight.w700,
             ),
@@ -553,7 +554,8 @@ class _IntentStep extends StatelessWidget {
         children: [
           DefiGlowText(
             text: 'How will you ride?',
-            style: GoogleFonts.spaceGrotesk(
+            style: TextStyle(
+              fontFamily: 'SpaceGrotesk',
               fontSize: 26,
               fontWeight: FontWeight.w700,
             ),
