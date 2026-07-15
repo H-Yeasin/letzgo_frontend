@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../constants/theme.dart';
 import '../../providers/auth_provider.dart';
 
@@ -82,9 +83,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
               const SizedBox(height: 8),
               Text(
                 'We sent a code to +${widget.phone}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -125,7 +124,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(6, (index) {
                     return SizedBox(
-                      width: 48,
+                      width: 56,
                       height: 56,
                       child: TextField(
                         controller: _otpControllers[index],
@@ -141,7 +140,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                           filled: true,
                           fillColor: Theme.of(context).colorScheme.surface,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                             borderSide: BorderSide(
                               color: Theme.of(context).colorScheme.outline,
                             ),
