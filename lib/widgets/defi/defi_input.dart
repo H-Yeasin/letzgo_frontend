@@ -10,6 +10,7 @@ class DefiInput extends StatelessWidget {
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final TextCapitalization textCapitalization;
 
   const DefiInput({
     super.key,
@@ -21,6 +22,7 @@ class DefiInput extends StatelessWidget {
     this.keyboardType,
     this.validator,
     this.onChanged,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -29,6 +31,7 @@ class DefiInput extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
+      textCapitalization: textCapitalization,
       validator: validator,
       onChanged: onChanged,
       style: TextStyle(

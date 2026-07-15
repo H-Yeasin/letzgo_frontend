@@ -14,6 +14,10 @@ class AuthState {
   final String? pendingPhone;
   final String? debugOtp;
 
+  /// True once [checkAuthStatus] (and its pre-hydration) has finished.
+  /// The router redirect holds on '/' until this flips.
+  final bool isInitialized;
+
   const AuthState({
     this.isLoading = false,
     this.isAuthenticated = false,
@@ -22,6 +26,7 @@ class AuthState {
     this.error,
     this.pendingPhone,
     this.debugOtp,
+    this.isInitialized = false,
   });
 
   AuthState copyWith({
@@ -32,6 +37,7 @@ class AuthState {
     String? error,
     String? pendingPhone,
     String? debugOtp,
+    bool? isInitialized,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
@@ -41,6 +47,7 @@ class AuthState {
       error: error,
       pendingPhone: pendingPhone ?? this.pendingPhone,
       debugOtp: debugOtp,
+      isInitialized: isInitialized ?? this.isInitialized,
     );
   }
 }
@@ -65,11 +72,14 @@ class AuthNotifier extends Notifier<AuthState> {
           isAuthenticated: true,
           user: user,
           isNewUser: !user.isOnboardingComplete,
+          isInitialized: true,
         );
       } catch (e) {
         // Token expired or invalid
         await _clearAuth();
       }
+    } else {
+      state = state.copyWith(isInitialized: true);
     }
   }
 
@@ -199,7 +209,7 @@ class AuthNotifier extends Notifier<AuthState> {
     await prefs.remove('auth_token');
     await prefs.remove('phone');
     _api.removeAuthToken();
-    state = const AuthState();
+    state = const AuthState(isInitialized: true);
   }
 }
 

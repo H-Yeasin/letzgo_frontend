@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../providers/onboarding_provider.dart';
 import '../screens/auth/phone_input_screen.dart';
 import '../screens/auth/otp_verification_screen.dart';
-import '../screens/auth/profile_setup_screen.dart';
+import '../screens/onboarding/intro_screen.dart';
+import '../screens/onboarding/profile_setup_screen.dart';
+import '../screens/onboarding/welcome_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/home/discover_screen.dart';
 import '../screens/home/chats_list_screen.dart';
@@ -28,6 +31,7 @@ class RouterNotifier extends ChangeNotifier {
 
   RouterNotifier(this._ref) {
     _ref.listen<AuthState>(authProvider, (previous, next) => notifyListeners());
+    _ref.listen<OnboardingPrefs>(onboardingPrefsProvider, (previous, next) => notifyListeners());
   }
 }
 
@@ -42,38 +46,50 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: notifier,
     redirect: (context, state) {
       final authState = ref.read(authProvider);
+      final prefs = ref.read(onboardingPrefsProvider);
       final isAuthenticated = authState.isAuthenticated;
       final isOnboardingComplete =
           !authState.isNewUser && (authState.user?.isOnboardingComplete ?? false);
-      final isSplash = state.matchedLocation == '/';
+      final hasSeenIntro = prefs.hasSeenIntro;
+      final loc = state.matchedLocation;
+      final isSplash = loc == '/';
+      final isIntro = loc == '/intro';
       final isAuthRoute =
-          state.matchedLocation.startsWith('/phone-input') ||
-          state.matchedLocation.startsWith('/otp-verification') ||
-          state.matchedLocation.startsWith('/profile-setup');
+          loc.startsWith('/phone-input') ||
+          loc.startsWith('/otp-verification') ||
+          loc.startsWith('/profile-setup');
 
-      // If loading, don't redirect from splash
-      if (authState.isLoading && isSplash) return null;
+      // 1) Hold on splash until prefs + auth are hydrated.
+      //    Funnel any pre-init location (web refresh / deep link) through splash.
+      if (!authState.isInitialized) return isSplash ? null : '/';
 
-      // Handle Splash screen transition
+      // 2) Splash picks the entry point once hydrated.
       if (isSplash) {
-        if (!isAuthenticated) return '/phone-input';
+        if (!isAuthenticated) return hasSeenIntro ? '/phone-input' : '/intro';
         if (!isOnboardingComplete) return '/profile-setup';
         return '/home';
       }
 
-      // If not authenticated and not on auth route, go to phone input
-      if (!isAuthenticated && !isAuthRoute) {
-        return '/phone-input';
+      // 3) Intro is only for unauthenticated users.
+      if (isIntro) {
+        if (isAuthenticated) return isOnboardingComplete ? '/home' : '/profile-setup';
+        return null;
       }
 
-      // If authenticated but not onboarded, go to profile setup
+      // 4) Unauthenticated users only on auth routes (intro handled above).
+      if (!isAuthenticated && !isAuthRoute) {
+        return hasSeenIntro ? '/phone-input' : '/intro';
+      }
+
+      // 5) Authenticated but not onboarded -> pinned to profile setup.
       if (isAuthenticated && !isOnboardingComplete) {
-        if (state.matchedLocation != '/profile-setup') {
+        if (loc != '/profile-setup') {
           return '/profile-setup';
         }
       }
 
-      // If authenticated and onboarded, don't allow auth routes
+      // 6) Onboarded users never see auth routes. /welcome is not an
+      //    auth route so the finale stays reachable.
       if (isAuthenticated && isOnboardingComplete && isAuthRoute) {
         return '/home';
       }
@@ -100,6 +116,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile-setup',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ProfileSetupScreen(),
+      ),
+
+      // Onboarding routes
+      GoRoute(
+        path: '/intro',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const IntroScreen(),
+      ),
+      GoRoute(
+        path: '/welcome',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const WelcomeScreen(),
       ),
 
       // Main app shell with bottom nav
@@ -222,6 +250,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _checkAuth() async {
+    // Hydrate onboarding prefs first so the redirect sees real values.
+    await ref.read(onboardingPrefsProvider.notifier).load();
     await ref.read(authProvider.notifier).checkAuthStatus();
     // GoRouter redirect will handle navigation
   }

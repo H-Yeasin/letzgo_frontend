@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import '../../constants/theme.dart';
 import '../../providers/auth_provider.dart';
 
@@ -46,8 +47,13 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final phone = '880${_phoneController.text.trim()}';
-    // In development phase, directly verify the phone number with the default dev OTP '123456'
-    await ref.read(authProvider.notifier).verifyOtp(phone, '123456');
+    await ref.read(authProvider.notifier).sendOtp(phone);
+
+    if (!mounted) return;
+    final authState = ref.read(authProvider);
+    if (authState.error == null) {
+      context.push('/otp-verification', extra: phone);
+    }
   }
 
   @override

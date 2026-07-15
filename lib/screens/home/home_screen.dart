@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../constants/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/location_provider.dart';
+import '../../providers/onboarding_provider.dart';
 import '../../providers/ping_provider.dart';
 import 'widgets/home_filters.dart';
 import 'widgets/home_header.dart';
@@ -281,6 +282,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authProvider);
     final locationState = ref.watch(locationProvider);
     final pingState = ref.watch(pingProvider);
+    final prefs = ref.watch(onboardingPrefsProvider);
     ref.listen<UserLocationState>(locationProvider, (previous, next) {
       if (next.latitude != null && next.longitude != null) {
         _loadNearbyRides(lat: next.latitude, lng: next.longitude);
@@ -340,6 +342,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               displayName: displayName,
               initial: userInitial,
               rating: user?.ratingAvg ?? 0.0,
+              rideIntent: prefs.rideIntent,
               onHostRide: () => context.push('/host-ride'),
               onFindRide: () => context.push('/discover'),
             ),

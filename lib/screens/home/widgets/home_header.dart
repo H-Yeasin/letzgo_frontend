@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letzgo_app/constants/theme.dart';
+import 'package:letzgo_app/providers/onboarding_provider.dart';
 import 'package:letzgo_app/providers/theme_provider.dart';
 
 class HomeHeader extends ConsumerWidget {
   final String displayName;
   final String initial;
   final double rating;
+  final RideIntent? rideIntent;
   final VoidCallback onHostRide;
   final VoidCallback onFindRide;
 
@@ -15,6 +17,7 @@ class HomeHeader extends ConsumerWidget {
     required this.displayName,
     required this.initial,
     required this.rating,
+    this.rideIntent,
     required this.onHostRide,
     required this.onFindRide,
   });
@@ -23,6 +26,17 @@ class HomeHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+
+    String subtitle;
+    switch (rideIntent) {
+      case RideIntent.host:
+        subtitle = 'Ready to host your next ride?';
+      case RideIntent.join:
+        subtitle = 'Find a ride heading your way';
+      case RideIntent.both:
+      case null:
+        subtitle = 'Where are you heading?';
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,7 +67,7 @@ class HomeHeader extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    'Where are you heading?',
+                    subtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -109,6 +123,7 @@ class HomeHeader extends ConsumerWidget {
                 label: 'Host a Ride',
                 color: AppTheme.primaryColor,
                 onTap: onHostRide,
+                emphasized: rideIntent == RideIntent.host,
               ),
             ),
             const SizedBox(width: 12),
@@ -118,6 +133,7 @@ class HomeHeader extends ConsumerWidget {
                 label: 'Find a Ride',
                 color: AppTheme.secondaryColor,
                 onTap: onFindRide,
+                emphasized: rideIntent == RideIntent.join,
               ),
             ),
           ],
@@ -132,23 +148,40 @@ class _ActionCard extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
+  final bool emphasized;
 
   const _ActionCard({
     required this.icon,
     required this.label,
     required this.color,
     required this.onTap,
+    this.emphasized = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withValues(
+            alpha: emphasized ? 0.18 : 0.1,
+          ),
           borderRadius: BorderRadius.circular(16),
+          border: emphasized
+              ? Border.all(color: color.withValues(alpha: 0.5))
+              : null,
+          boxShadow: emphasized
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.25),
+                    blurRadius: 16,
+                    spreadRadius: -2,
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           children: [
