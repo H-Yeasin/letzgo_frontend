@@ -21,7 +21,6 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
   bool _timedOut = false;
-  bool _ready = false;
   Timer? _timeoutTimer;
 
   @override
@@ -31,13 +30,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       if (mounted) setState(() => _timedOut = true);
     });
     _checkAuth();
-    // Let the first frame render completely before any animation work kicks in.
-    // On cold start (JIT), the first frame is already expensive — starting 3
-    // AnimationControllers simultaneously on top of it causes the 90+ frame
-    // skip we see in debug mode.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() => _ready = true);
-    });
   }
 
   @override
@@ -94,9 +86,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   color: Colors.white,
                   size: 48,
                 ),
-              ).animate(
-                target: _ready ? 1 : 0,
-              ).scale(
+              ).animate().scale(
                 begin: const Offset(0.6, 0.6),
                 duration: 600.ms,
                 curve: Curves.elasticOut,
@@ -113,9 +103,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   fontWeight: FontWeight.w700,
                   color: defi.fg,
                 ),
-              ).animate(
-                target: _ready ? 1 : 0,
-              ).fadeIn(
+              ).animate().fadeIn(
                 delay: 300.ms,
                 duration: 500.ms,
               ).slideY(begin: 0.15, duration: 500.ms),
@@ -130,9 +118,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   color: defi.fgMuted,
                   letterSpacing: 0.3,
                 ),
-              ).animate(
-                target: _ready ? 1 : 0,
-              ).fadeIn(
+              ).animate().fadeIn(
                 delay: 500.ms,
                 duration: 500.ms,
               ),
@@ -177,9 +163,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                       color: defi.fgMuted,
                     ),
                   ).animate(
-                    // Only show the spinner after the initial entrance animation
-                    // so the layout feels settled first.
-                    target: _ready ? 1 : 0,
                     delay: 600.ms,
                   ).fadeIn(),
                 ),

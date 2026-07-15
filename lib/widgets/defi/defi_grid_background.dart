@@ -10,8 +10,8 @@ class DefiGridBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        RepaintBoundary(
-          child: Positioned.fill(
+        Positioned.fill(
+          child: RepaintBoundary(
             child: CustomPaint(
               painter: _GridPainter(context.defi.gridLine),
             ),

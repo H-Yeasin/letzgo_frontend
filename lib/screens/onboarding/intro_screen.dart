@@ -440,7 +440,9 @@ class _RadarVisualState extends State<_RadarVisual>
     super.initState();
     _dotCtrls = List.generate(3, (i) {
       final ctrl = AnimationController(vsync: this, duration: 1500.ms);
-      Future.delayed((i * 500).ms, () => ctrl.repeat());
+      Future.delayed((i * 500).ms, () {
+        if (mounted) ctrl.repeat();
+      });
       return ctrl;
     });
   }
