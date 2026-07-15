@@ -1,9 +1,11 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../constants/app_colors.dart';
 import '../../constants/defi_theme_extension.dart';
 import '../../providers/onboarding_provider.dart';
@@ -77,10 +79,7 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
 
   void _next() {
     if (_page < _pages.length - 1) {
-      _pageController.nextPage(
-        duration: 400.ms,
-        curve: Curves.easeOutCubic,
-      );
+      _pageController.nextPage(duration: 400.ms, curve: Curves.easeOutCubic);
     } else {
       _finish();
     }
@@ -146,10 +145,7 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                   onPageChanged: (i) => setState(() => _page = i),
                   itemBuilder: (context, index) {
                     final data = _pages[index];
-                    return _IntroPageContent(
-                      data: data,
-                      index: index,
-                    );
+                    return _IntroPageContent(data: data, index: index);
                   },
                 ),
               ),
@@ -218,10 +214,7 @@ class _IntroPageContent extends StatelessWidget {
         children: [
           const SizedBox(height: 24),
           // Visual area
-          SizedBox(
-            height: 240,
-            child: _buildVisual(context, defi),
-          ),
+          SizedBox(height: 240, child: _buildVisual(context, defi)),
           const SizedBox(height: 32),
           // Text block
           KeyedSubtree(
@@ -269,10 +262,7 @@ class _IntroPageContent extends StatelessWidget {
                 ),
               ],
             ),
-          )
-              .animate()
-              .fadeIn(duration: 400.ms)
-              .slideY(begin: 0.08),
+          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.08),
         ],
       ),
     );
@@ -311,10 +301,8 @@ class _SharedRolesVisualState extends State<_SharedRolesVisual>
   @override
   void initState() {
     super.initState();
-    _swapCtrl = AnimationController(
-      vsync: this,
-      duration: 900.ms,
-    )..repeat(reverse: true);
+    _swapCtrl = AnimationController(vsync: this, duration: 900.ms)
+      ..repeat(reverse: true);
   }
 
   @override
@@ -331,8 +319,8 @@ class _SharedRolesVisualState extends State<_SharedRolesVisual>
       children: [
         // Center car icon
         Container(
-          width: 72,
-          height: 72,
+          width: 300,
+          height: 70,
           decoration: BoxDecoration(
             gradient: defi.gradientPrimary,
             borderRadius: BorderRadius.circular(20),
@@ -354,10 +342,7 @@ class _SharedRolesVisualState extends State<_SharedRolesVisual>
         Positioned(
           left: 20,
           top: 50,
-          child: _riderDot(
-            gradient: defi.gradientPrimary,
-            size: 44,
-          ),
+          child: _riderDot(gradient: defi.gradientPrimary, size: 44),
         ),
         // Right rider icon
         Positioned(
@@ -366,7 +351,9 @@ class _SharedRolesVisualState extends State<_SharedRolesVisual>
           child: _riderDot(
             gradient: Gradient.lerp(
               defi.gradientGold,
-              const LinearGradient(colors: [AppColors.primary, Color(0xFFFFD600)]),
+              const LinearGradient(
+                colors: [AppColors.primary, Color(0xFFFFD600)],
+              ),
               1.0,
             )!,
             size: 44,
@@ -374,8 +361,8 @@ class _SharedRolesVisualState extends State<_SharedRolesVisual>
         ),
         // Swap icon between them
         Positioned(
-          left: 68,
-          top: 72,
+          left: 108,
+          top: 70,
           child: AnimatedBuilder(
             animation: _swapCtrl,
             builder: (context, child) => Transform.scale(
@@ -383,11 +370,7 @@ class _SharedRolesVisualState extends State<_SharedRolesVisual>
               child: DefiGlassCard(
                 padding: const EdgeInsets.all(6),
                 borderRadius: 12,
-                child: Icon(
-                  Icons.swap_horiz,
-                  size: 18,
-                  color: defi.fg,
-                ),
+                child: Icon(Icons.swap_horiz, size: 18, color: defi.fg),
               ),
             ),
           ),
@@ -430,15 +413,8 @@ class _SharedRolesVisualState extends State<_SharedRolesVisual>
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        gradient: gradient,
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        Icons.person,
-        color: Colors.white,
-        size: size * 0.5,
-      ),
+      decoration: BoxDecoration(gradient: gradient, shape: BoxShape.circle),
+      child: Icon(Icons.person, color: Colors.white, size: size * 0.5),
     );
   }
 }
@@ -454,17 +430,14 @@ class _RadarVisual extends StatefulWidget {
 }
 
 class _RadarVisualState extends State<_RadarVisual>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final List<AnimationController> _dotCtrls;
 
   @override
   void initState() {
     super.initState();
     _dotCtrls = List.generate(3, (i) {
-      final ctrl = AnimationController(
-        vsync: this,
-        duration: 1500.ms,
-      );
+      final ctrl = AnimationController(vsync: this, duration: 1500.ms);
       Future.delayed((i * 500).ms, () => ctrl.repeat());
       return ctrl;
     });
@@ -481,11 +454,7 @@ class _RadarVisualState extends State<_RadarVisual>
   @override
   Widget build(BuildContext context) {
     final defi = widget.defi;
-    final dotColors = [
-      AppColors.primary,
-      defi.info,
-      defi.success,
-    ];
+    final dotColors = [AppColors.primary, defi.info, defi.success];
 
     // Ring radii
     const rings = [110.0, 75.0, 40.0];
@@ -586,10 +555,7 @@ class _FareSplitVisualState extends State<_FareSplitVisual>
   @override
   void initState() {
     super.initState();
-    _fareCtrl = AnimationController(
-      vsync: this,
-      duration: 2300.ms,
-    )..repeat();
+    _fareCtrl = AnimationController(vsync: this, duration: 2300.ms)..repeat();
   }
 
   @override
@@ -621,16 +587,18 @@ class _FareSplitVisualState extends State<_FareSplitVisual>
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Icon(Icons.arrow_forward, size: 18, color: AppColors.primary),
+                const Icon(
+                  Icons.arrow_forward,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 12),
                 // Animated fare
                 AnimatedBuilder(
                   animation: _fareCtrl,
                   builder: (context, _) {
                     final t = _fareCtrl.value;
-                    final value = t < 0.6
-                        ? 300.0 - ((t / 0.6) * 150.0)
-                        : 150.0;
+                    final value = t < 0.6 ? 300.0 - ((t / 0.6) * 150.0) : 150.0;
                     return DefiGlowText(
                       text: '৳ ${value.round()}',
                       style: GoogleFonts.spaceGrotesk(
@@ -649,7 +617,11 @@ class _FareSplitVisualState extends State<_FareSplitVisual>
                 _miniAvatar(size: 24),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 6),
-                  child: Icon(Icons.call_split, size: 16, color: AppColors.primary),
+                  child: Icon(
+                    Icons.call_split,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
                 ),
                 _miniAvatar(size: 24),
                 const SizedBox(width: 8),

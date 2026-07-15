@@ -46,7 +46,6 @@ class OnboardingPrefs {
 /// the splash screen must await [load] before auth resolution so the
 /// router redirect sees real values on first navigation.
 class OnboardingPrefsNotifier extends Notifier<OnboardingPrefs> {
-  static const _introKey = 'has_seen_intro';
   static const _intentKey = 'ride_intent';
   static const _avatarKey = 'avatar_style';
 
@@ -56,18 +55,18 @@ class OnboardingPrefsNotifier extends Notifier<OnboardingPrefs> {
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     state = OnboardingPrefs(
-      hasSeenIntro: prefs.getBool(_introKey) ?? false,
+      // hasSeenIntro defaults to false every cold start — the intro
+      // keeps showing until the user authenticates (the router redirect
+      // checks isAuthenticated before hasSeenIntro).
       rideIntent: rideIntentFromName(prefs.getString(_intentKey)),
       avatarStyle: prefs.getInt(_avatarKey) ?? 0,
     );
   }
 
-  // State is updated before the async write so navigation that follows
-  // immediately (e.g. the router redirect) reads the new value.
+  // Sets the in-memory flag so the current session doesn't re-route
+  // back to intro after Skip/Get Started. Never persisted.
   Future<void> markIntroSeen() async {
     state = state.copyWith(hasSeenIntro: true);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_introKey, true);
   }
 
   Future<void> setRideIntent(RideIntent intent) async {
