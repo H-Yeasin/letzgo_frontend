@@ -9,7 +9,6 @@ class ApiService {
   }
 
   late final Dio _dio;
-  String? _authToken;
 
   ApiService._internal() {
     _dio = Dio(
@@ -31,12 +30,10 @@ class ApiService {
   }
 
   void setAuthToken(String token) {
-    _authToken = token;
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
   void removeAuthToken() {
-    _authToken = null;
     _dio.options.headers.remove('Authorization');
   }
 

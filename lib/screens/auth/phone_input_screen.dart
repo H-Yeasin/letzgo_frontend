@@ -62,7 +62,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Form(
             key: _formKey,
@@ -156,7 +156,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                         : const Text('Continue'),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 32),
                 Center(
                   child: Text(
                     'By continuing, you agree to our Terms & Privacy Policy',

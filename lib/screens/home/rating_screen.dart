@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../constants/theme.dart';
+import '../../providers/api_provider.dart';
 
 class RatingScreen extends ConsumerStatefulWidget {
   final String matchId;
@@ -30,15 +31,31 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
       return;
     }
 
-    // TODO: Submit rating via API
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Rating submitted!'),
-          backgroundColor: AppTheme.successColor,
-        ),
-      );
-      context.go('/home');
+    try {
+      final api = ref.read(apiServiceProvider);
+      await api.submitRating(widget.matchId, {
+        'rating': _rating,
+        'feedback': _feedbackController.text.trim(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Rating submitted!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+        context.go('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit rating: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
     }
   }
 

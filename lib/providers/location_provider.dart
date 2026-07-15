@@ -81,7 +81,9 @@ class LocationNotifier extends Notifier<UserLocationState> {
       permissionGranted = true;
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+        ),
       );
 
       final displayName = await _resolveAddress(

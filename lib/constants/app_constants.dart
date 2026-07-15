@@ -15,6 +15,8 @@ class AppConstants {
     const override = String.fromEnvironment('BASE_URL');
     if (override.isNotEmpty) return override;
     if (Platform.isAndroid) return 'http://10.0.2.2:8000/api/v1/';
+    // Change the IP below to your dev machine's LAN IP when running on a physical device.
+    // Find it with `ipconfig` (e.g. 192.168.x.x).
     return 'http://localhost:8000/api/v1/';
   }
 

@@ -67,7 +67,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             : ListView.separated(
                 padding: const EdgeInsets.all(8),
                 itemCount: notifState.notifications.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final notif = notifState.notifications[index];
                   return ListTile(

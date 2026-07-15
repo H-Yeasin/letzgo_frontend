@@ -175,14 +175,14 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen> {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: () {
-                  ref
+                onPressed: () async {
+                  await ref
                       .read(matchProvider.notifier)
                       .completeMatch(
                         widget.matchId,
                         match.ride?.estimatedFare ?? 0,
                       );
-                  if (mounted) {
+                  if (context.mounted) {
                     context.push('/rating/${widget.matchId}');
                   }
                 },
@@ -218,11 +218,11 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen> {
                     ],
                   ),
                 );
-                if (confirmed == true && mounted) {
+                if (confirmed == true && context.mounted) {
                   await ref
                       .read(matchProvider.notifier)
                       .cancelMatch(widget.matchId);
-                  if (mounted) context.go('/home');
+                  if (context.mounted) context.go('/home');
                 }
               },
               icon: const Icon(Icons.cancel_outlined),

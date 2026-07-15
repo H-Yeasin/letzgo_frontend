@@ -22,6 +22,7 @@ import '../screens/home/settings_screen.dart';
 import '../screens/home/edit_profile_screen.dart';
 import '../screens/home/rating_screen.dart';
 import '../screens/home/active_ride_screen.dart';
+import '../screens/splash/splash_screen.dart';
 import '../screens/home/main_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -233,64 +234,3 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-// Splash screen kept in router file for organization
-class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends ConsumerState<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _checkAuth();
-  }
-
-  Future<void> _checkAuth() async {
-    // Hydrate onboarding prefs first so the redirect sees real values.
-    await ref.read(onboardingPrefsProvider.notifier).load();
-    await ref.read(authProvider.notifier).checkAuthStatus();
-    // GoRouter redirect will handle navigation
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.directions_car_filled,
-                color: Colors.white,
-                size: 40,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'LetzGo',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 32),
-            CircularProgressIndicator(color: theme.colorScheme.primary),
-          ],
-        ),
-      ),
-    );
-  }
-}

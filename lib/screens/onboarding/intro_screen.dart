@@ -363,8 +363,8 @@ class _SharedRolesVisualState extends State<_SharedRolesVisual>
         ),
         // Swap icon between them
         Positioned(
-          left: 108,
-          top: 70,
+          left: 132,
+          top: 60,
           child: AnimatedBuilder(
             animation: _swapCtrl,
             builder: (context, child) => Transform.scale(
@@ -469,7 +469,7 @@ class _RadarVisualState extends State<_RadarVisual>
       children: [
         for (final r in rings)
           Container(
-            width: r * 2,
+            width: r * 3,
             height: r * 2,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
