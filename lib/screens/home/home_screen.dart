@@ -1,3 +1,5 @@
+import 'dart:math' show cos, sin, sqrt, asin;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,14 +35,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   late final TextEditingController _destinationFilterController;
   double _refreshRotation = 0.0;
 
+  /// Approximate Haversine distance between two lat/lng points in meters.
+  static double _distanceMeters(double lat1, double lng1, double lat2, double lng2) {
+    const r = 6371000.0;
+    final dLat = _toRad(lat2 - lat1);
+    final dLng = _toRad(lng2 - lng1);
+    final a = _sq(sin(dLat / 2)) +
+        cos(_toRad(lat1)) * cos(_toRad(lat2)) * _sq(sin(dLng / 2));
+    return r * 2 * asin(sqrt(a));
+  }
+  static double _toRad(double deg) => deg * (3.141592653589793 / 180);
+  static double _sq(double x) => x * x;
+
   @override
   void initState() {
     super.initState();
     _destinationFilterController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Start location fetch first. The listener below will automatically
+      // call _loadNearbyRides when coordinates arrive, so there's no need
+      // for a separate fetch with fallback coords here.
       ref.read(locationProvider.notifier).refreshLocation();
-      _loadNearbyRides();
       _loadMyRides();
+    });
+    // Listen for location updates — only one listener is ever active
+    // because initState runs once. Avoids re-registering on every build.
+    ref.listenManual<UserLocationState>(locationProvider, (previous, next) {
+      if (next.latitude != null && next.longitude != null) {
+        // Don't re-fetch if coordinates barely changed (within ~200m)
+        // to avoid duplicate API calls when lastKnown fires → then GPS fires.
+        if (previous?.latitude == null ||
+            _distanceMeters(
+              previous!.latitude!, previous.longitude!,
+              next.latitude!, next.longitude!,
+            ) > 200) {
+          _loadNearbyRides(lat: next.latitude, lng: next.longitude);
+        }
+      }
     });
   }
 
@@ -283,11 +314,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final locationState = ref.watch(locationProvider);
     final pingState = ref.watch(pingProvider);
     final prefs = ref.watch(onboardingPrefsProvider);
-    ref.listen<UserLocationState>(locationProvider, (previous, next) {
-      if (next.latitude != null && next.longitude != null) {
-        _loadNearbyRides(lat: next.latitude, lng: next.longitude);
-      }
-    });
     final user = authState.user;
     final now = DateTime.now();
     const activeStatuses = {'open', 'matched'};

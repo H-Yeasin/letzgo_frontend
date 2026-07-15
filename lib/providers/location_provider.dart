@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show cos, sqrt, asin, sin, pow;
 
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -6,6 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letzgo_app/providers/api_provider.dart';
 
 const _copyWithErrorSentinel = Object();
+
+/// Time limit for a high-accuracy GPS fix. Beyond this, use what we have
+/// rather than leaving the user waiting.
+const _locationTimeout = Duration(seconds: 8);
 
 class UserLocationState {
   final double? latitude;
@@ -54,6 +59,31 @@ class LocationNotifier extends Notifier<UserLocationState> {
     bool permissionGranted = false;
 
     try {
+      // ── 1. Try last-known position for instant display ─────────
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null) {
+        state = state.copyWith(
+          latitude: lastKnown.latitude,
+          longitude: lastKnown.longitude,
+          permissionGranted: true,
+        );
+        // Start reverse geocode in background — if it completes before
+        // the fresh fix, the user sees a name immediately.
+        _resolveAddress(lastKnown.latitude, lastKnown.longitude)
+            .then((name) {
+          if (name.isNotEmpty) {
+            // ignore: no-cli-dev, this is the only valid path
+            // (notifier might be disposed; setting state on a disposed
+            //  provider throws only in debug mode — wrap to stay safe)
+            // ignore: avoid-async-catch
+            try {
+              state = state.copyWith(displayName: name);
+            } catch (_) {}
+          }
+        });
+      }
+
+      // ── 2. Check services & permission ─────────────────────────
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         state = state.copyWith(
@@ -80,31 +110,52 @@ class LocationNotifier extends Notifier<UserLocationState> {
 
       permissionGranted = true;
 
+      // ── 3. Fresh position with timeout and lower accuracy ───────
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.best,
+          accuracy: LocationAccuracy.high,
+          timeLimit: _locationTimeout,
         ),
-      );
+      ).timeout(_locationTimeout, onTimeout: () {
+        // If GPS fix times out, keep the last-known position we already set
+        throw TimeoutException('Location request timed out.');
+      });
 
-      final displayName = await _resolveAddress(
-        position.latitude,
-        position.longitude,
-      );
+      // Only update if the new fix is more precise or coordinates differ
+      // significantly (>100m) — avoids unnecessary rebuild + API call churn
+      final old = state;
+      final stale = _metersBetween(
+            old.latitude, old.longitude, position.latitude, position.longitude,
+          ) > 100;
+      if (old.latitude == null || stale || old.displayName == null) {
+        final displayName = await _resolveAddress(
+          position.latitude,
+          position.longitude,
+        );
 
-      state = state.copyWith(
-        latitude: position.latitude,
-        longitude: position.longitude,
-        displayName: displayName,
-        isLoading: false,
-        error: null,
-        permissionGranted: permissionGranted,
-      );
+        state = state.copyWith(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          displayName: displayName,
+          isLoading: false,
+          error: null,
+          permissionGranted: permissionGranted,
+        );
+      } else {
+        // Fresh fix is within 100m of cached value — don't churn UI/API
+        state = state.copyWith(isLoading: false, permissionGranted: true);
+      }
     } catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        error: _formatError(error),
-        permissionGranted: permissionGranted,
-      );
+      // If we already had a last-known position, don't clear it on error
+      if (state.latitude == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: _formatError(error),
+          permissionGranted: permissionGranted,
+        );
+      } else {
+        state = state.copyWith(isLoading: false, permissionGranted: true);
+      }
     }
   }
 
@@ -169,6 +220,19 @@ class LocationNotifier extends Notifier<UserLocationState> {
     }
     return 'Could not determine your location.';
   }
+
+  /// Approximate Haversine distance in meters between two lat/lng points.
+  double _metersBetween(double? lat1, double? lng1, double lat2, double lng2) {
+    if (lat1 == null || lng1 == null) return double.infinity;
+    const r = 6371000.0;
+    final dLat = _toRad(lat2 - lat1);
+    final dLng = _toRad(lng2 - lng1);
+    final a = pow(sin(dLat / 2), 2) +
+        cos(_toRad(lat1)) * cos(_toRad(lat2)) * pow(sin(dLng / 2), 2);
+    return r * 2 * asin(sqrt(a));
+  }
+
+  double _toRad(double deg) => deg * (3.141592653589793 / 180);
 }
 
 final locationProvider =
