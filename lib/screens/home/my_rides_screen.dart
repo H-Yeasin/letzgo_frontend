@@ -177,7 +177,7 @@ class _MyRidesScreenState extends ConsumerState<MyRidesScreen>
 
     setState(() => _isDeletingExpired = true);
     final deleted = await ref.read(pingProvider.notifier).deleteExpiredPings();
-    if (!mounted) {
+    if (!context.mounted) {
       return;
     }
 
