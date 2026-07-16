@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../widgets/location/location_picker.dart';
 import '../host_ride_draft_provider.dart';
-import '../widgets/location_picker.dart';
 
 /// Step 2 — choose where the ride is headed. Shows the pickup point
 /// as a marker so the trip visually takes shape.

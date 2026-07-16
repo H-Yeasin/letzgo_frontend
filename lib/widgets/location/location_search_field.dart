@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../constants/app_colors.dart';
-import '../../../constants/defi_theme_extension.dart';
-import '../../../providers/api_provider.dart';
-import '../../../widgets/defi/defi_glass_card.dart';
-import '../../../widgets/defi/defi_skeleton.dart';
-import '../models/location_selection.dart';
+import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
+import '../../models/location_selection.dart';
+import '../../providers/api_provider.dart';
+import '../defi/defi_glass_card.dart';
+import '../defi/defi_skeleton.dart';
 
-/// Debounced place search that floats over the map. Queries the backend
+/// Debounced place search that floats over a map. Queries the backend
 /// geocoder and shows an animated results dropdown.
 class LocationSearchField extends ConsumerStatefulWidget {
   final String hintText;

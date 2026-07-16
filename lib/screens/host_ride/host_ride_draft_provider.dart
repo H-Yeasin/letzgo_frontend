@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/create_ride_ping_request.dart';
+import '../../models/location_selection.dart';
 import '../../models/ride_ping.dart';
 import '../../providers/ping_provider.dart';
-import 'models/location_selection.dart';
 
 /// Everything the host-ride wizard gathers across its steps.
 /// Ephemeral UI state (controllers, map, debounce timers) stays in widgets.

@@ -15,6 +15,21 @@ class AppConstants {
     return 'http://10.0.2.2:8000/api/v1/';
   }
 
+  /// Server origin (scheme://host:port) derived from [baseUrl], used to
+  /// resolve server-relative media paths like `/uploads/avatars/x.jpg`.
+  static String get serverOrigin {
+    final uri = Uri.parse(baseUrl);
+    return '${uri.scheme}://${uri.host}:${uri.port}';
+  }
+
+  /// Resolve a media path returned by the API into a full URL.
+  /// Absolute URLs (e.g. Cloudinary) pass through unchanged.
+  static String? resolveMediaUrl(String? path) {
+    if (path == null || path.isEmpty) return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return '$serverOrigin$path';
+  }
+
   static const int connectionTimeout = 30000;
   static const int receiveTimeout = 30000;
   static const double defaultSearchRadiusMeters = 500;

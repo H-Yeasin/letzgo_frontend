@@ -6,15 +6,15 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../../constants/app_colors.dart';
-import '../../../constants/defi_theme_extension.dart';
-import '../../../providers/api_provider.dart';
-import '../../../providers/location_provider.dart';
-import '../../../widgets/defi/defi_glass_card.dart';
-import '../../../widgets/defi/defi_glow_text.dart';
-import '../../../widgets/defi/defi_skeleton.dart';
-import '../../../widgets/location_settings_dialog.dart';
-import '../models/location_selection.dart';
+import '../../constants/app_colors.dart';
+import '../../constants/defi_theme_extension.dart';
+import '../../models/location_selection.dart';
+import '../../providers/api_provider.dart';
+import '../../providers/location_provider.dart';
+import '../defi/defi_glass_card.dart';
+import '../defi/defi_glow_text.dart';
+import '../defi/defi_skeleton.dart';
+import '../location_settings_dialog.dart';
 import 'location_search_field.dart';
 
 /// Full-height map picker with a fixed center pin: pan the map to drop the
@@ -36,6 +36,10 @@ class LocationPicker extends ConsumerStatefulWidget {
   /// chosen yet (pickup step behavior).
   final bool autoSelectDeviceLocation;
 
+  /// Unique hero tag for the my-location FAB (avoid collisions when
+  /// multiple pickers can be on screen across routes).
+  final String? heroTag;
+
   final ValueChanged<LocationSelection> onSelected;
 
   const LocationPicker({
@@ -47,6 +51,7 @@ class LocationPicker extends ConsumerStatefulWidget {
     this.otherPoint,
     this.isOrigin = false,
     this.autoSelectDeviceLocation = false,
+    this.heroTag,
   });
 
   @override
@@ -140,8 +145,9 @@ class _LocationPickerState extends ConsumerState<LocationPicker> {
       } catch (_) {
         final coordStr = '${center.latitude.toStringAsFixed(6)}, '
             '${center.longitude.toStringAsFixed(6)}';
-        final results =
-            await ref.read(apiServiceProvider).searchLocation(coordStr, limit: 1);
+        final results = await ref
+            .read(apiServiceProvider)
+            .searchLocation(coordStr, limit: 1);
         label = results.isNotEmpty
             ? LocationSelection.shortenAddress(
                 results.first['display_name'] as String)
@@ -344,7 +350,8 @@ class _LocationPickerState extends ConsumerState<LocationPicker> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               FloatingActionButton.small(
-                heroTag: 'locate_${widget.isOrigin ? 'pickup' : 'destination'}',
+                heroTag: widget.heroTag ??
+                    'locate_${widget.isOrigin ? 'pickup' : 'destination'}',
                 onPressed: _goToMyLocation,
                 backgroundColor: defi.surfaceElevated,
                 child: const Icon(
