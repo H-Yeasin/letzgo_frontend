@@ -5,9 +5,9 @@ import '../../constants/app_colors.dart';
 /// vibrant gradient background. The [styleIndex] selects from [palette];
 /// used in the onboarding profile step and the welcome screen.
 ///
-/// Because LetzGo has no photo-upload endpoint and the avatar field
-/// (`avatarUrl`) is an optional string, every user gets a deterministic
-/// initials avatar based on their name and the locally-stored style index.
+/// Fallback avatar for users without an uploaded photo (`avatarUrl` is
+/// optional): a deterministic initials avatar based on the user's name and
+/// the locally-stored style index.
 class DefiInitialsAvatar extends StatelessWidget {
   final String name;
   final int styleIndex;

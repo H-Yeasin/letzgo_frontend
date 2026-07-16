@@ -82,6 +82,23 @@ class ApiService {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> uploadAvatar(String filePath) async {
+    final ext = filePath.split('.').last.toLowerCase();
+    final subtype = switch (ext) {
+      'png' => 'png',
+      'webp' => 'webp',
+      _ => 'jpeg',
+    };
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(
+        filePath,
+        contentType: DioMediaType('image', subtype),
+      ),
+    });
+    final response = await _dio.post('/users/me/avatar', data: formData);
+    return response.data;
+  }
+
   // ============= Ping / Ride Endpoints =============
 
   Future<Map<String, dynamic>> createPing(Map<String, dynamic> data) async {

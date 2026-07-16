@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../constants/app_constants.dart';
 import '../../constants/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
@@ -13,6 +14,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
+    final avatarUrl = AppConstants.resolveMediaUrl(user?.avatarUrl);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -35,10 +37,10 @@ class ProfileScreen extends ConsumerWidget {
                 CircleAvatar(
                   radius: 48,
                   backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                  backgroundImage: user?.avatarUrl != null
-                      ? NetworkImage(user!.avatarUrl!)
+                  backgroundImage: avatarUrl != null
+                      ? NetworkImage(avatarUrl)
                       : null,
-                  child: user?.avatarUrl == null
+                  child: avatarUrl == null
                       ? Text(
                           user?.name.isNotEmpty == true
                               ? user!.name[0].toUpperCase()
