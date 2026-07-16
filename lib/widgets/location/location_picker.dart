@@ -394,22 +394,27 @@ class _CenterPin extends StatelessWidget {
             offset: lifted ? const Offset(0, -0.18) : Offset.zero,
             duration: 150.ms,
             curve: Curves.easeOut,
-            child: Icon(
-              Icons.location_on,
-              size: 46,
-              color: color,
-              shadows: const [
-                Shadow(color: Colors.black45, blurRadius: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.location_on,
+                  size: 46,
+                  color: color,
+                  shadows: const [
+                    Shadow(color: Colors.black45, blurRadius: 8),
+                  ],
+                ),
+                AnimatedContainer(
+                  duration: 150.ms,
+                  width: lifted ? 14 : 8,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.black38,
+                    borderRadius: BorderRadius.circular(9999),
+                  ),
+                ),
               ],
-            ),
-          ),
-          AnimatedContainer(
-            duration: 150.ms,
-            width: lifted ? 14 : 8,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.black38,
-              borderRadius: BorderRadius.circular(9999),
             ),
           ),
         ],
