@@ -19,6 +19,7 @@ class UserLocationState {
   final bool isLoading;
   final String? error;
   final bool permissionGranted;
+  final bool permissionDeniedForever;
 
   const UserLocationState({
     this.latitude,
@@ -27,6 +28,7 @@ class UserLocationState {
     this.isLoading = false,
     this.error,
     this.permissionGranted = false,
+    this.permissionDeniedForever = false,
   });
 
   UserLocationState copyWith({
@@ -36,6 +38,7 @@ class UserLocationState {
     bool? isLoading,
     Object? error = _copyWithErrorSentinel,
     bool? permissionGranted,
+    bool? permissionDeniedForever,
   }) {
     return UserLocationState(
       latitude: latitude ?? this.latitude,
@@ -46,6 +49,8 @@ class UserLocationState {
           ? this.error
           : error as String?,
       permissionGranted: permissionGranted ?? this.permissionGranted,
+      permissionDeniedForever:
+          permissionDeniedForever ?? this.permissionDeniedForever,
     );
   }
 }
@@ -90,6 +95,7 @@ class LocationNotifier extends Notifier<UserLocationState> {
           isLoading: false,
           error: 'Location services are disabled.',
           permissionGranted: false,
+          permissionDeniedForever: false,
         );
         return;
       }
@@ -102,8 +108,12 @@ class LocationNotifier extends Notifier<UserLocationState> {
           permission == LocationPermission.deniedForever) {
         state = state.copyWith(
           isLoading: false,
-          error: 'Location permission is required.',
+          error: permission == LocationPermission.deniedForever
+              ? 'Location permission is permanently denied.'
+              : 'Location permission is required.',
           permissionGranted: false,
+          permissionDeniedForever:
+              permission == LocationPermission.deniedForever,
         );
         return;
       }
@@ -140,10 +150,15 @@ class LocationNotifier extends Notifier<UserLocationState> {
           isLoading: false,
           error: null,
           permissionGranted: permissionGranted,
+          permissionDeniedForever: false,
         );
       } else {
         // Fresh fix is within 100m of cached value — don't churn UI/API
-        state = state.copyWith(isLoading: false, permissionGranted: true);
+        state = state.copyWith(
+          isLoading: false,
+          permissionGranted: true,
+          permissionDeniedForever: false,
+        );
       }
     } catch (error) {
       // If we already had a last-known position, don't clear it on error
@@ -152,9 +167,16 @@ class LocationNotifier extends Notifier<UserLocationState> {
           isLoading: false,
           error: _formatError(error),
           permissionGranted: permissionGranted,
+          permissionDeniedForever: permissionGranted
+              ? false
+              : state.permissionDeniedForever,
         );
       } else {
-        state = state.copyWith(isLoading: false, permissionGranted: true);
+        state = state.copyWith(
+          isLoading: false,
+          permissionGranted: true,
+          permissionDeniedForever: false,
+        );
       }
     }
   }

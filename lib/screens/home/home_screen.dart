@@ -10,6 +10,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/onboarding_provider.dart';
 import '../../providers/ping_provider.dart';
+import '../../widgets/location_settings_dialog.dart';
 import 'widgets/home_filters.dart';
 import 'widgets/home_header.dart';
 import 'widgets/my_rides_section.dart';
@@ -283,6 +284,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
+                if (!locationState.permissionGranted) ...[
+                  const SizedBox(height: 4),
+                  GestureDetector(
+                    onTap: locationState.permissionDeniedForever
+                        ? () => showLocationSettingsDialog(context)
+                        : _triggerLocationRefresh,
+                    child: Text(
+                      locationState.permissionDeniedForever
+                          ? 'Open Settings'
+                          : 'Enable location',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

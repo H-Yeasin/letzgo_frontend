@@ -8,6 +8,7 @@ import '../../models/create_ride_ping_request.dart';
 import '../../providers/api_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/ping_provider.dart';
+import '../../widgets/location_settings_dialog.dart';
 import 'widgets/host_ride_fields.dart';
 import 'widgets/host_ride_map_picker.dart';
 import 'widgets/ride_preference_controls.dart';
@@ -121,6 +122,10 @@ class _HostRideScreenState extends ConsumerState<HostRideScreen> {
 
   void _centerMapOnLatestLocation() {
     final locationState = ref.read(locationProvider);
+    if (locationState.permissionDeniedForever) {
+      showLocationSettingsDialog(context);
+      return;
+    }
     final lat = locationState.latitude ?? _mapCenterLat;
     final lng = locationState.longitude ?? _mapCenterLng;
     setState(() {

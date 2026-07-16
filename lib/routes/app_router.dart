@@ -6,6 +6,7 @@ import '../providers/onboarding_provider.dart';
 import '../screens/auth/phone_input_screen.dart';
 import '../screens/auth/otp_verification_screen.dart';
 import '../screens/onboarding/intro_screen.dart';
+import '../screens/onboarding/permissions_screen.dart';
 import '../screens/onboarding/profile_setup_screen.dart';
 import '../screens/onboarding/welcome_screen.dart';
 import '../screens/home/home_screen.dart';
@@ -52,9 +53,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnboardingComplete =
           !authState.isNewUser && (authState.user?.isOnboardingComplete ?? false);
       final hasSeenIntro = prefs.hasSeenIntro;
+      final hasSeenPermissions = prefs.hasSeenPermissions;
       final loc = state.matchedLocation;
       final isSplash = loc == '/';
       final isIntro = loc == '/intro';
+      final isWelcome = loc == '/welcome';
+      final isPermissions = loc == '/permissions';
       final isAuthRoute =
           loc.startsWith('/phone-input') ||
           loc.startsWith('/otp-verification') ||
@@ -87,6 +91,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (loc != '/profile-setup') {
           return '/profile-setup';
         }
+      }
+
+      // 5.5) Onboarded but hasn't seen the permissions screen yet — let
+      //      /welcome still play once (it's the onboarding finale), but any
+      //      other destination (including the explicit context.go('/home')
+      //      calls in welcome_screen.dart and otp_verification_screen.dart)
+      //      gets bounced to /permissions first.
+      if (isAuthenticated &&
+          isOnboardingComplete &&
+          !hasSeenPermissions &&
+          !isWelcome &&
+          !isPermissions) {
+        return '/permissions';
       }
 
       // 6) Onboarded users never see auth routes. /welcome is not an
@@ -129,6 +146,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/welcome',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/permissions',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const PermissionsScreen(),
       ),
 
       // Main app shell with bottom nav
