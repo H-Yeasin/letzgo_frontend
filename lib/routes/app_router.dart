@@ -13,7 +13,7 @@ import '../screens/home/home_screen.dart';
 import '../screens/home/discover_screen.dart';
 import '../screens/home/chats_list_screen.dart';
 import '../screens/home/profile_screen.dart';
-import '../screens/home/host_ride_screen.dart';
+import '../screens/host_ride/host_ride_wizard_screen.dart';
 import '../screens/home/ride_details_screen.dart';
 import '../screens/home/my_rides_screen.dart';
 import '../screens/home/ride_history_screen.dart';
@@ -202,7 +202,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/host-ride',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const HostRideScreen(),
+        builder: (context, state) => const HostRideWizardScreen(),
       ),
       GoRoute(
         path: '/ride-details/:id',
