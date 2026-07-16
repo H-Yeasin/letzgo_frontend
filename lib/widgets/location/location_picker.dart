@@ -16,6 +16,7 @@ import '../defi/defi_glow_text.dart';
 import '../defi/defi_skeleton.dart';
 import '../location_settings_dialog.dart';
 import 'location_search_field.dart';
+import 'map_pin_icon.dart';
 
 /// Full-height map picker with a fixed center pin: pan the map to drop the
 /// pin, tap to jump, search, or use the device location. Resolves the pin
@@ -397,13 +398,9 @@ class _CenterPin extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.location_on,
+                MapPinIcon(
                   size: 46,
                   color: color,
-                  shadows: const [
-                    Shadow(color: Colors.black45, blurRadius: 8),
-                  ],
                 ),
                 AnimatedContainer(
                   duration: 150.ms,

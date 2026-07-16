@@ -15,6 +15,7 @@ import '../../widgets/defi/defi_button.dart';
 import '../../widgets/defi/defi_glass_card.dart';
 import '../../widgets/defi/defi_skeleton.dart';
 import '../../widgets/location/location_picker.dart';
+import '../../widgets/location/map_pin_icon.dart';
 import '../../widgets/location_settings_dialog.dart';
 import '../../widgets/ride_ping_card.dart';
 
@@ -250,11 +251,9 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                     width: 44,
                     height: 44,
                     alignment: Alignment.topCenter,
-                    child: const Icon(
-                      Icons.location_on,
-                      color: AppColors.secondary,
+                    child: const MapPinIcon(
                       size: 40,
-                      shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
+                      color: AppColors.secondary,
                     ),
                   ),
                   // Ride pins
