@@ -36,7 +36,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final data = await _api.getMessages(matchId);
-      final items = (data['items'] as List)
+      final items = data
           .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
           .toList();
       state = state.copyWith(isLoading: false, messages: items);
@@ -45,13 +45,46 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
-  Future<bool> sendMessage(String matchId, String content) async {
+  /// Silent refresh — does NOT set isLoading, used for polling so the UI
+  /// doesn't flash a spinner on every tick.
+  Future<void> silentRefresh(String matchId) async {
+    try {
+      final data = await _api.getMessages(matchId);
+      final incoming = data
+          .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+          .toList();
+      // Only update state if there are new messages
+      if (incoming.length != state.messages.length) {
+        state = state.copyWith(messages: incoming);
+      }
+    } catch (_) {
+      // Swallow errors during background polling
+    }
+  }
+
+  Future<bool> sendMessage(String matchId, String content, String currentUserId) async {
+    // Optimistic update: add a temporary message immediately so the UI
+    // responds at once — no waiting for the network round-trip.
+    final tempMsg = ChatMessage(
+      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+      matchId: matchId,
+      senderId: currentUserId,
+      message: content,
+      createdAt: DateTime.now(),
+    );
+    state = state.copyWith(messages: [...state.messages, tempMsg]);
+
     try {
       await _api.sendMessage(matchId, content);
-      await fetchMessages(matchId);
+      // Silent refresh to get the real server message (replaces the temp one)
+      await silentRefresh(matchId);
       return true;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      // Roll back the optimistic message on failure
+      state = state.copyWith(
+        messages: state.messages.where((m) => m.id != tempMsg.id).toList(),
+        error: e.toString(),
+      );
       return false;
     }
   }

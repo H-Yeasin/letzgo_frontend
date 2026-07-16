@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:letzgo_app/models/user.dart';
 import '../../../constants/theme.dart';
 import '../../../models/ride_ping.dart';
+import 'ride_passengers_sheet.dart';
 
 typedef MatchRequestAction =
     Future<void> Function(MatchRequest request, String action);
@@ -122,9 +123,36 @@ class RideFactsCard extends StatelessWidget {
               value: _genderLabel(ping.genderPreference),
             ),
             const Divider(height: 24),
-            _FactRow(
-              label: 'Passengers',
-              value: '${ping.currentPassengers}/${ping.maxPassengers}',
+            InkWell(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => RidePassengersSheet(pingId: ping.id),
+                );
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Text('Passengers'),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                    Text('${ping.currentPassengers}/${ping.maxPassengers}'),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

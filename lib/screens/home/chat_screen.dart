@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/theme.dart';
@@ -7,8 +8,9 @@ import '../../models/ride_ping.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String matchId;
+  final bool isRequest;
 
-  const ChatScreen({super.key, required this.matchId});
+  const ChatScreen({super.key, required this.matchId, this.isRequest = false});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -17,6 +19,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -25,11 +28,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ref
           .read(chatProvider(widget.matchId).notifier)
           .fetchMessages(widget.matchId);
+      // Poll for new messages every 4 seconds
+      _pollingTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+        ref
+            .read(chatProvider(widget.matchId).notifier)
+            .silentRefresh(widget.matchId);
+      });
     });
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -51,10 +61,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
+    final userId = ref.read(authProvider).user?.id ?? '';
     _messageController.clear();
-    await ref
+    // Optimistic update happens immediately inside the notifier
+    ref
         .read(chatProvider(widget.matchId).notifier)
-        .sendMessage(widget.matchId, content);
+        .sendMessage(widget.matchId, content, userId);
     _scrollToBottom();
   }
 
@@ -202,7 +214,7 @@ class _MessageBubble extends StatelessWidget {
           ],
         ),
         child: Text(
-          message.content,
+          message.message,
           style: TextStyle(
             color: isMe ? Colors.white : theme.colorScheme.onSurface,
             fontSize: 15,

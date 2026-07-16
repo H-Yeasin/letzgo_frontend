@@ -223,8 +223,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/chat/:matchId',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) =>
-            ChatScreen(matchId: state.pathParameters['matchId']!),
+        builder: (context, state) {
+          final isRequest = state.uri.queryParameters['isRequest'] == 'true';
+          return ChatScreen(
+            matchId: state.pathParameters['matchId']!,
+            isRequest: isRequest,
+          );
+        },
       ),
       GoRoute(
         path: '/notifications',

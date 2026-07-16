@@ -245,12 +245,22 @@ class ApiService {
     return response.data;
   }
 
-  Future<Map<String, dynamic>> getMessages(String matchId) async {
-    final response = await _dio.get('/chat/$matchId');
+  Future<List<dynamic>> getMessages(String matchId) async {
+    final response = await _dio.get('/chat/$matchId/history');
     return response.data;
   }
 
   // ============= Notification Endpoints =============
+
+  Future<Map<String, dynamic>> acceptMatchRequest(String requestId) async {
+    final response = await _dio.post('/matches/request/$requestId/accept');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> declineMatchRequest(String requestId) async {
+    final response = await _dio.post('/matches/request/$requestId/decline');
+    return response.data;
+  }
 
   Future<Map<String, dynamic>> getNotifications() async {
     final response = await _dio.get('/notifications');
@@ -322,5 +332,10 @@ class ApiService {
       },
     );
     return response.data['display_name'] as String;
+  }
+
+  Future<List<dynamic>> getRidePassengers(String pingId) async {
+    final response = await _dio.get('/pings/$pingId/passengers');
+    return response.data as List<dynamic>;
   }
 }

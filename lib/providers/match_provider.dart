@@ -28,6 +28,7 @@ class MatchState {
     Set<String>? requestedRideIds,
     Match? activeMatch,
     String? error,
+    bool clearError = false,
   }) {
     return MatchState(
       isLoading: isLoading ?? this.isLoading,
@@ -35,7 +36,7 @@ class MatchState {
       pendingRequests: pendingRequests ?? this.pendingRequests,
       requestedRideIds: requestedRideIds ?? this.requestedRideIds,
       activeMatch: activeMatch ?? this.activeMatch,
-      error: error,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }
@@ -46,8 +47,23 @@ class MatchNotifier extends Notifier<MatchState> {
   @override
   MatchState build() => const MatchState();
 
+  void clearError() {
+    state = state.copyWith(clearError: true);
+  }
+
+  String _handleError(Object e) {
+    if (e is DioException) {
+      if (e.response?.data != null && e.response!.data is Map) {
+        final detail = e.response!.data['detail'];
+        if (detail != null) return detail.toString();
+      }
+      return 'Network error: ${e.response?.statusCode ?? e.message}';
+    }
+    return e.toString();
+  }
+
   Future<void> fetchMyMatches() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final data = await _api.getMyMatches();
       final items = data
@@ -55,25 +71,25 @@ class MatchNotifier extends Notifier<MatchState> {
           .toList();
       state = state.copyWith(isLoading: false, myMatches: items);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: _handleError(e));
     }
   }
 
   Future<Match?> getMatchDetails(String matchId) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final data = await _api.getMatchDetails(matchId);
       final match = Match.fromJson(data);
       state = state.copyWith(isLoading: false, activeMatch: match);
       return match;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: _handleError(e));
       return null;
     }
   }
 
   Future<bool> requestMatch(String rideId) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _api.requestMatch(rideId);
       final updated = {...state.requestedRideIds, rideId};
@@ -85,24 +101,24 @@ class MatchNotifier extends Notifier<MatchState> {
         state = state.copyWith(isLoading: false, requestedRideIds: updated);
         return true;
       }
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: _handleError(e));
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: _handleError(e));
       return false;
     }
   }
 
   Future<void> fetchPendingRequests(String rideId) async {
-    state = state.copyWith(pendingRequests: [], error: null);
+    state = state.copyWith(pendingRequests: [], clearError: true);
     try {
       final data = await _api.getMatchRequests(rideId);
       final items = data
           .map((e) => MatchRequest.fromJson(e as Map<String, dynamic>))
           .toList();
-      state = state.copyWith(pendingRequests: items, error: null);
+      state = state.copyWith(pendingRequests: items, clearError: true);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: _handleError(e));
     }
   }
 
@@ -112,7 +128,7 @@ class MatchNotifier extends Notifier<MatchState> {
       await fetchMyMatches();
       return true;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: _handleError(e));
       return false;
     }
   }
@@ -124,7 +140,7 @@ class MatchNotifier extends Notifier<MatchState> {
       state = state.copyWith(activeMatch: match);
       return true;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: _handleError(e));
       return false;
     }
   }
@@ -135,7 +151,7 @@ class MatchNotifier extends Notifier<MatchState> {
       await fetchMyMatches();
       return true;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: _handleError(e));
       return false;
     }
   }
@@ -146,7 +162,7 @@ class MatchNotifier extends Notifier<MatchState> {
       await fetchMyMatches();
       return true;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: _handleError(e));
       return false;
     }
   }

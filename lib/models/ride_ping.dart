@@ -72,9 +72,7 @@ class RidePing {
       createdAt: DateTime.parse(json['created_at'] as String),
       host: json['host'] != null
           ? PublicUserProfile.fromJson(
-              Map<String, dynamic>.from(
-                json['host'] as Map<String, dynamic>,
-              ),
+              Map<String, dynamic>.from(json['host'] as Map<String, dynamic>),
             )
           : null,
     );
@@ -161,25 +159,28 @@ class MatchRequest {
 
 class ChatMessage {
   final String id;
-  final String matchId;
+  final String? matchId;
+  final String? requestId;
   final String senderId;
-  final String content;
+  final String message;
   final DateTime createdAt;
 
   ChatMessage({
     required this.id,
-    required this.matchId,
+    this.matchId,
+    this.requestId,
     required this.senderId,
-    required this.content,
+    required this.message,
     required this.createdAt,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     return ChatMessage(
       id: json['id'] as String,
-      matchId: json['match_id'] as String,
+      matchId: json['match_id'] as String?,
+      requestId: json['request_id'] as String?,
       senderId: json['sender_id'] as String,
-      content: json['content'] as String,
+      message: json['message'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -192,6 +193,7 @@ class Notification {
   final String title;
   final String body;
   final String? relatedId;
+  final String? requestId;
   final bool isRead;
   final DateTime createdAt;
 
@@ -202,24 +204,28 @@ class Notification {
     required this.title,
     required this.body,
     this.relatedId,
+    this.requestId,
     this.isRead = false,
     required this.createdAt,
   });
 
   factory Notification.fromJson(Map<String, dynamic> json) {
     String? relatedId = json['related_id'] as String?;
+    String? requestId;
     final dataRaw = json['data'];
-    if (relatedId == null && dataRaw != null) {
+    if (dataRaw != null) {
       try {
         final decoded = dataRaw is String ? jsonDecode(dataRaw) : dataRaw;
         if (decoded is Map) {
-          final candidate = decoded['related_id'] ??
+          final candidate =
+              decoded['related_id'] ??
               decoded['ride_id'] ??
               decoded['match_id'];
-          relatedId = candidate?.toString();
+          relatedId ??= candidate?.toString();
+          requestId = decoded['request_id']?.toString();
         }
       } catch (_) {
-        relatedId = null;
+        // Ignore parse error
       }
     }
     return Notification(
@@ -229,8 +235,35 @@ class Notification {
       title: json['title'] as String,
       body: json['body'] as String,
       relatedId: relatedId,
+      requestId: requestId,
       isRead: json['is_read'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
+    );
+  }
+}
+
+class RidePassenger {
+  final String matchId;
+  final String userId;
+  final String name;
+  final String? gender;
+  final double ratingAvg;
+
+  RidePassenger({
+    required this.matchId,
+    required this.userId,
+    required this.name,
+    this.gender,
+    required this.ratingAvg,
+  });
+
+  factory RidePassenger.fromJson(Map<String, dynamic> json) {
+    return RidePassenger(
+      matchId: json['match_id'] as String,
+      userId: json['user_id'] as String,
+      name: json['name'] as String,
+      gender: json['gender'] as String?,
+      ratingAvg: (json['rating_avg'] as num).toDouble(),
     );
   }
 }
