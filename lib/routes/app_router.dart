@@ -15,6 +15,7 @@ import '../screens/home/chats_list_screen.dart';
 import '../screens/home/profile_screen.dart';
 import '../screens/host_ride/host_ride_wizard_screen.dart';
 import '../screens/home/ride_details_screen.dart';
+import '../screens/home/nearby_rides_screen.dart';
 import '../screens/home/my_rides_screen.dart';
 import '../screens/home/ride_history_screen.dart';
 import '../screens/home/chat_screen.dart';
@@ -209,6 +210,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) =>
             RideDetailsScreen(pingId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/nearby-rides',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final radius =
+              double.tryParse(state.uri.queryParameters['radius'] ?? '') ??
+                  2000.0;
+          final gender = state.uri.queryParameters['gender'];
+          return NearbyRidesScreen(radiusMeters: radius, gender: gender);
+        },
       ),
       GoRoute(
         path: '/my-rides',

@@ -10,6 +10,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/onboarding_provider.dart';
 import '../../providers/ping_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../widgets/location_settings_dialog.dart';
 import 'widgets/home_filters.dart';
 import 'widgets/home_header.dart';
@@ -332,6 +333,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final locationState = ref.watch(locationProvider);
     final pingState = ref.watch(pingProvider);
     final prefs = ref.watch(onboardingPrefsProvider);
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     final user = authState.user;
     final now = DateTime.now();
     const activeStatuses = {'open', 'matched'};
@@ -365,6 +367,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         title: const Text('LetzGo'),
         actions: [
+          IconButton(
+            onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+            tooltip: isDark ? 'Switch to light theme' : 'Switch to dark theme',
+            icon: Icon(
+              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              size: 22,
+              color: AppTheme.primaryColor,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+            ),
+          ),
           IconButton(
             icon: Badge(
               isLabelVisible: false,
@@ -420,7 +434,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               filteredNearby: filteredNearby,
               isLoading: pingState.isLoading,
               onFiltersPressed: () => _showNearbyFilterSheet(context),
-              onSeeAll: () => context.push('/discover'),
+              onSeeAll: () => context.push(
+                Uri(
+                  path: '/nearby-rides',
+                  queryParameters: {
+                    'radius': _selectedRadiusMeters.toString(),
+                    if (_selectedGender != 'any') 'gender': _selectedGender,
+                  },
+                ).toString(),
+              ),
               onRideTap: (id) => context.push('/ride-details/$id'),
             ),
           ],
