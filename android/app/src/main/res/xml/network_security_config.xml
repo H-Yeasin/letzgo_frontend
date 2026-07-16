@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Allows plain HTTP (cleartext) only to the production API host, since it's
+  not behind TLS yet. Remove this exception once the backend has a domain +
+  HTTPS (see backend deployment notes) — everything else stays blocked by
+  Android's default cleartext policy.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">159.198.39.126</domain>
+    </domain-config>
+</network-security-config>
