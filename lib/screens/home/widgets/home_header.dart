@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letzgo_app/constants/theme.dart';
 import 'package:letzgo_app/providers/onboarding_provider.dart';
-import 'package:letzgo_app/providers/theme_provider.dart';
 
 class HomeHeader extends ConsumerWidget {
   final String displayName;
@@ -25,7 +24,6 @@ class HomeHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
 
     String subtitle;
     switch (rideIntent) {
@@ -75,19 +73,6 @@ class HomeHeader extends ConsumerWidget {
                 ],
               ),
             ),
-            IconButton(
-              onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
-              tooltip: isDark ? 'Switch to light theme' : 'Switch to dark theme',
-              icon: Icon(
-                isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-                size: 22,
-                color: AppTheme.primaryColor,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-              ),
-            ),
-            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
