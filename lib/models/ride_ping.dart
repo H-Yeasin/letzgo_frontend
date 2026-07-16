@@ -89,6 +89,8 @@ class Match {
   final DateTime? completedAt;
   final DateTime createdAt;
   final RidePing? ride;
+  final PublicUserProfile? host;
+  final PublicUserProfile? guest;
 
   Match({
     required this.id,
@@ -100,6 +102,8 @@ class Match {
     this.completedAt,
     required this.createdAt,
     this.ride,
+    this.host,
+    this.guest,
   });
 
   factory Match.fromJson(Map<String, dynamic> json) {
@@ -118,6 +122,12 @@ class Match {
       createdAt: DateTime.parse(json['created_at'] as String),
       ride: json['ride'] != null
           ? RidePing.fromJson(json['ride'] as Map<String, dynamic>)
+          : null,
+      host: json['host'] != null
+          ? PublicUserProfile.fromJson(json['host'] as Map<String, dynamic>)
+          : null,
+      guest: json['guest'] != null
+          ? PublicUserProfile.fromJson(json['guest'] as Map<String, dynamic>)
           : null,
     );
   }

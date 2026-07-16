@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../constants/app_constants.dart';
 import '../../constants/theme.dart';
 import '../../providers/match_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -71,7 +72,13 @@ class _ChatsListScreenState extends ConsumerState<ChatsListScreen> {
                   final match = activeMatches[index];
                   final isHost =
                       match.hostId == ref.read(authProvider).user?.id;
-                  final name = match.ride?.host?.name ?? 'Rider';
+                  // The chat partner is the other party of the match.
+                  final other = isHost ? match.guest : match.host;
+                  final name = other?.name ?? 'Rider';
+                  final avatarUrl = AppConstants.resolveMediaUrl(
+                    other?.avatarUrl,
+                  );
+                  final isInProgress = match.status == 'in_progress';
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
@@ -80,16 +87,21 @@ class _ChatsListScreenState extends ConsumerState<ChatsListScreen> {
                         backgroundColor: AppTheme.primaryColor.withValues(
                           alpha: 0.1,
                         ),
-                        child: Text(
-                          name[0].toUpperCase(),
-                          style: const TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        backgroundImage: avatarUrl != null
+                            ? NetworkImage(avatarUrl)
+                            : null,
+                        child: avatarUrl == null
+                            ? Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                style: const TextStyle(
+                                  color: AppTheme.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
                       ),
                       title: Text(
-                        isHost ? name : 'Rider',
+                        name,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text(
@@ -99,10 +111,10 @@ class _ChatsListScreenState extends ConsumerState<ChatsListScreen> {
                       ),
                       trailing: Chip(
                         label: Text(
-                          match.status == 'matched' ? 'Pending' : 'Active',
+                          isInProgress ? 'Active' : 'Matched',
                           style: const TextStyle(fontSize: 12),
                         ),
-                        backgroundColor: match.status == 'in_progress'
+                        backgroundColor: isInProgress
                             ? AppTheme.statusOpen.withValues(alpha: 0.1)
                             : AppTheme.statusMatched.withValues(alpha: 0.1),
                       ),
