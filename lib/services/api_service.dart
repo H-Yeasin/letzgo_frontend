@@ -158,7 +158,8 @@ class ApiService {
     required double currentLng,
     required double destinationLat,
     required double destinationLng,
-    double radius = 500.0,
+    double pickupRadius = 5000.0,
+    double destinationRadius = 1000.0,
   }) async {
     final response = await _dio.post(
       '/rides/find',
@@ -167,7 +168,8 @@ class ApiService {
         'current_lng': currentLng,
         'destination_lat': destinationLat,
         'destination_lng': destinationLng,
-        'radius': radius,
+        'pickup_radius': pickupRadius,
+        'destination_radius': destinationRadius,
       },
     );
     return response.data;

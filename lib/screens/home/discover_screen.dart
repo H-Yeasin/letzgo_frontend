@@ -15,6 +15,7 @@ import '../../widgets/defi/defi_button.dart';
 import '../../widgets/defi/defi_glass_card.dart';
 import '../../widgets/defi/defi_skeleton.dart';
 import '../../widgets/location/location_picker.dart';
+import '../../widgets/location_settings_dialog.dart';
 import '../../widgets/ride_ping_card.dart';
 
 /// Find a Ride — two phases:
@@ -28,8 +29,10 @@ class DiscoverScreen extends ConsumerStatefulWidget {
 }
 
 class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
-  static const double _fallbackLat = 23.8103; // Dhaka
-  static const double _fallbackLng = 90.4125;
+  /// Riders tolerate a longer trip to a pickup point than slack on where
+  /// the ride is headed, so the two search radii differ.
+  static const double _pickupRadiusMeters = 5000.0;
+  static const double _destinationRadiusMeters = 1000.0;
 
   final _resultsMapController = MapController();
 
@@ -50,18 +53,46 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     super.dispose();
   }
 
-  void _findRides() {
+  Future<void> _findRides() async {
     final destination = _destination;
     if (destination == null) return;
-    setState(() => _showResults = true);
 
-    final location = ref.read(locationProvider);
+    // Never search from a made-up location: results are matched against the
+    // rider's real position, so a stale/missing fix must block the search.
+    var location = ref.read(locationProvider);
+    if (location.latitude == null || location.longitude == null) {
+      await ref.read(locationProvider.notifier).refreshLocation();
+      if (!mounted) return;
+      location = ref.read(locationProvider);
+    }
+
+    final lat = location.latitude;
+    final lng = location.longitude;
+    if (lat == null || lng == null) {
+      if (location.permissionDeniedForever) {
+        await showLocationSettingsDialog(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              location.error ??
+                  'We need your location to find rides near you.',
+            ),
+            action: SnackBarAction(label: 'Retry', onPressed: _findRides),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _showResults = true);
     ref.read(pingProvider.notifier).findRides(
-          currentLat: location.latitude ?? _fallbackLat,
-          currentLng: location.longitude ?? _fallbackLng,
+          currentLat: lat,
+          currentLng: lng,
           destinationLat: destination.lat,
           destinationLng: destination.lng,
-          radius: 500.0,
+          pickupRadius: _pickupRadiusMeters,
+          destinationRadius: _destinationRadiusMeters,
         );
   }
 

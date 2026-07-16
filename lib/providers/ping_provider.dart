@@ -102,7 +102,8 @@ class PingNotifier extends Notifier<PingState> {
     required double currentLng,
     required double destinationLat,
     required double destinationLng,
-    double radius = 500.0,
+    double pickupRadius = 5000.0,
+    double destinationRadius = 1000.0,
   }) async {
     state = state.copyWith(isFindLoading: true, error: null);
     try {
@@ -111,7 +112,8 @@ class PingNotifier extends Notifier<PingState> {
         currentLng: currentLng,
         destinationLat: destinationLat,
         destinationLng: destinationLng,
-        radius: radius,
+        pickupRadius: pickupRadius,
+        destinationRadius: destinationRadius,
       );
       final items = (data['items'] as List)
           .map((e) => RidePing.fromJson(e as Map<String, dynamic>))
